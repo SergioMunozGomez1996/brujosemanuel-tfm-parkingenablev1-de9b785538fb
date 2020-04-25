@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#00A7E1</color>
+    <color name="colorPrimaryDark">#2274A5</color>
+    <color name="colorAccent">#EDAE49</color>
+    <color name="colorNegative">#D1495B</color>
+    <color name="whiteGoogle">#FFFFFF</color>
+</resources>
+ 

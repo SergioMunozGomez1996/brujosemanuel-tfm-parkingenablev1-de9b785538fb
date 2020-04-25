@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "688471393680",
+    "firebase_url": "https://tfm-parking.firebaseio.com",
+    "project_id": "tfm-parking",
+    "storage_bucket": "tfm-parking.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:688471393680:android:90a9c16014bf6a1c",
+        "android_client_info": {
+          "package_name": "com.example.parkingenable"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "688471393680-lv47r4ct91no9q9ns8l1dnbt0edaq1i7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.parkingenable",
+            "certificate_hash": "82e9d9c55cd4808c2c22e8ea4601d14906730551"
+          }
+        },
+        {
+          "client_id": "688471393680-8lb5jeqb21vvbark6nntfs65j6pm58mp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAprQcXewz7FaGyqPdVM4_tHU95xYYnkZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "688471393680-8lb5jeqb21vvbark6nntfs65j6pm58mp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

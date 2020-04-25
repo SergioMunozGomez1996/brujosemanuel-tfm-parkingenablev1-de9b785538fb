@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        map:layout_constraintBottom_toBottomOf="parent"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintTop_toTopOf="parent"
+        tools:context=".MapsActivity" />
+
+    <com.getbase.floatingactionbutton.FloatingActionsMenu
+        android:id="@+id/grupo_map_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="304dp"
+        app:fab_addButtonColorNormal="@color/colorPrimary"
+        app:fab_addButtonColorPressed="@color/colorPrimaryDark"
+        app:fab_labelStyle="@style/etiqueta"
+        app:layout_anchor="@+id/map"
+        app:layout_anchorGravity="right|center"
+        app:layout_constraintEnd_toEndOf="@+id/map"
+        app:layout_constraintTop_toTopOf="@+id/searchBar">
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fabSize="mini"
+            app:fab_colorNormal="?attr/colorAccent"
+            app:fab_icon="@android:drawable/ic_dialog_map"
+            app:fab_title="Estándar" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fabSize="mini"
+            app:fab_colorNormal="?attr/colorAccent"
+            app:fab_icon="@android:drawable/ic_dialog_map"
+            app:fab_title="Satélite" />
+
+    </com.getbase.floatingactionbutton.FloatingActionsMenu>
+
+    <!-- if you set mt_speechMode to true, the search icon change to micro icon-->
+
+    <com.getbase.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_ubication"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="16dp"
+        app:fabSize="mini"
+        app:fab_addButtonColorPressed="@color/colorPrimaryDark"
+        app:fab_colorNormal="?attr/colorPrimary"
+        app:fab_icon="@drawable/ic_navigation_black_24dp"
+        app:fab_title="Ubicación"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.getbase.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_newParking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:fabSize="mini"
+        app:fab_addButtonColorPressed="@color/colorPrimaryDark"
+        app:fab_colorNormal="?attr/colorPrimary"
+        app:fab_icon="@drawable/ic_add_location_black_24dp"
+        app:fab_title="Nueva plaza"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.mancj.materialsearchbar.MaterialSearchBar
+        android:id="@+id/searchBar"
+        style="@style/MaterialSearchBarLight"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="5dp"
+        android:background="@drawable/white_border"
+        android:elevation="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:mt_hint="Custom hint"
+        app:mt_maxSuggestionsCount="10"
+        app:mt_speechMode="false" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout_bannerQuestionsLoca"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="101dp"
+        android:background="@drawable/background_blue_whiteshape"
+        android:clickable="true"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:weightSum="10"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_weight="9"
+            android:src="@drawable/navigation" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="¿Dar permisos de ubicación?"
+            android:textColor="@color/whiteGoogle"
+            android:textSize="25sp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

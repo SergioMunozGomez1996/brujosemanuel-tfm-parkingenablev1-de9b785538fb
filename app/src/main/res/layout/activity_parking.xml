@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ParkingActivity">
+
+    <TextView
+        android:id="@+id/streetName_textGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
+        android:gravity="center"
+        android:text="Nombre de la calle"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="25sp" />
+
+    <LinearLayout
+        android:id="@+id/card_like"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_item"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/positive_vote" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bien!"
+                android:textColor="#4a4a4a"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textview_info_like"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¿Buenos accesos?¿Sencillo aparcar?"
+                android:textColor="#bebebe"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/card_dislike"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_item"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/negative_vote" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No!"
+                android:textColor="#4a4a4a"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¿Sitio en mal estado? ¿Dificil acceso?"
+                android:textColor="#bebebe"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/card_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_item"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/navigation" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Navegar"
+                android:textColor="#4a4a4a"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Inicia la navegación"
+                android:textColor="#bebebe"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="100dp"
+        android:layout_marginRight="80dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/bg_item"
+        android:orientation="vertical"
+        android:padding="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginRight="5dp"
+                        android:src="@drawable/smiling_face" />
+
+                    <TextView
+                        android:id="@+id/textview_like"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Likes: "
+                        android:textColor="#4a4a4a"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginRight="5dp"
+                        android:src="@drawable/sad_face" />
+
+                    <TextView
+                        android:id="@+id/textview_dislike"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dislikes: "
+                        android:textColor="#4a4a4a"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button_errorParking"
+            android:layout_width="match_parent"
+            android:layout_weight="18"
+            android:layout_height="50dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="30dp"
+            android:background="@drawable/ic_triangle_exclamation"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/button_back"
+            android:layout_width="match_parent"
+            android:layout_weight="6"
+            android:layout_height="50dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginRight="32dp"
+            android:layout_marginBottom="30dp"
+            android:background="@drawable/fondo_colorpalett_1"
+            android:text="Atrás"
+            android:textAllCaps="false"
+            android:textColor="@color/whiteGoogle"
+            android:textSize="25dp" />
+    </LinearLayout>
+
+</LinearLayout>

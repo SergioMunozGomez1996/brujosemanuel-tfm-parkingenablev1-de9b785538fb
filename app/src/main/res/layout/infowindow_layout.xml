@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5dp"
+    android:background="#FFFFFF"
+    >
+
+    <!--android:background="#E1F0F0F0"-->
+    <ImageView
+        android:id="@+id/info_window_imagen"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="centerInside"
+        android:layout_toRightOf="@id/info_window_imagen"
+        android:src="@drawable/ic_open_in_new_black_24dp" />
+
+    <TextView
+        android:id="@+id/info_window_calle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="15sp"
+        android:textColor="@color/quantum_black_100"
+        android:layout_marginRight="10dp"
+        android:layout_toRightOf="@id/info_window_imagen"
+        android:paddingLeft="5dp"
+        android:text="Nombre de la calle" />
+
+    <TextView
+        android:id="@+id/info_window_estado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/quantum_black_100"
+        android:layout_below="@id/info_window_calle"
+        android:layout_toRightOf="@id/info_window_imagen"
+        android:paddingLeft="5dp"
+        android:text="Estado: Activo" />
+
+</RelativeLayout>

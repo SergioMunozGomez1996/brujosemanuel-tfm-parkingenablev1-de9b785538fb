@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ParkingEnable</string>
+    <string name="title_activity_maps">Parking Enable</string>
+    <string name="title_activity_floating_button">FloatingButtonActivity</string>
+    <string name="newparking_question">Si deseas ayudar ponte sobre la plaza y pulsa enviar</string>
+    <string name="question_parking">¿No tenemos esta plaza registrada?</string>
+    <string name="question_parking_not_exist">¿Esta plaza ya no existe?</string>
+</resources>
