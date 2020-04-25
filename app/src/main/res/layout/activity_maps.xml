@@ -6,24 +6,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:map="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        map:layout_constraintBottom_toBottomOf="parent"
-        map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintStart_toStartOf="parent"
-        map:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
         tools:context=".MapsActivity" />
 
     <com.getbase.floatingactionbutton.FloatingActionsMenu
         android:id="@+id/grupo_map_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="304dp"
+        android:layout_marginTop="240dp"
         app:fab_addButtonColorNormal="@color/colorPrimary"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_labelStyle="@style/etiqueta"
@@ -70,18 +70,30 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <com.getbase.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_newParking"
+    android:id="@+id/fab_newParking"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:fabSize="mini"
+    app:fab_addButtonColorPressed="@color/colorPrimaryDark"
+    app:fab_colorNormal="?attr/colorPrimary"
+    app:fab_icon="@drawable/ic_add_location_black_24dp"
+    app:fab_title="Nueva plaza"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent" />
+
+    <com.getbase.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_colorNormal="?attr/colorPrimary"
-        app:fab_icon="@drawable/ic_add_location_black_24dp"
-        app:fab_title="Nueva plaza"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:fab_icon="@drawable/ic_person_add"
+        app:fab_title="Login"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/grupo_map_fab" />
 
     <com.mancj.materialsearchbar.MaterialSearchBar
         android:id="@+id/searchBar"

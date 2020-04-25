@@ -110,6 +110,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LinearLayout bannerQuestonLocation;
     FloatingActionButton ubicationButton;
     FloatingActionButton newParkingButton;
+    FloatingActionButton loginButton;
 
     //private WeakHashMap mMarkers = new WeakHashMap<Integer, Marker>();
 
@@ -139,6 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Navigation Menu
         ubicationButton = findViewById(R.id.fab_ubication);
         newParkingButton = findViewById(R.id.fab_newParking);
+        loginButton = findViewById(R.id.fab_login);
         //bottomNavigationView = findViewById(R.id.bottom_navigation_menu);
         //bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
 
@@ -167,6 +169,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 showPopupNewParking();
+            }
+        });
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent  = new Intent(MapsActivity.this, LoginActivity.class);
+                startActivity(intent);
             }
         });
     }
