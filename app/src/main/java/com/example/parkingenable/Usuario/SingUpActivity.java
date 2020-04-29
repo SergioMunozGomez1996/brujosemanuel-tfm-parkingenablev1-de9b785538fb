@@ -1,12 +1,19 @@
 package com.example.parkingenable.Usuario;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -22,17 +29,26 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 public class SingUpActivity extends AppCompatActivity {
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
 
     //Database
     private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
     //User's preferences
     public static final String PREFS_NAME = "MyPrefsFile";
+    public static final String USER_ID = "userID";
 
     private ProgressBar progressBar;
     private EditText email;
@@ -63,51 +79,104 @@ public class SingUpActivity extends AppCompatActivity {
         checkBox = findViewById(R.id.autoParking_checkBox);
         singUpButton = findViewById(R.id.singUp_button);
 
+        cardNumber.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (editable.toString().equals("")){
+                    cameraButton.setEnabled(false);
+                    cameraButton.setTextColor(getResources().getColor(R.color.grayGoogle));
+                    cameraButton.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                }else{
+                    cameraButton.setEnabled(true);
+                    cameraButton.setTextColor(getResources().getColor(R.color.whiteGoogle));
+                    cameraButton.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                }
+            }
+        });
+
         singUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 createAccount();
             }
         });
+
+        cameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            }
+        });
     }
 
-    private void createAccount(){
-        final String email = this.email.getText().toString().trim();
-        final String password = this.password.getText().toString().trim();
-        final String name = this.name.getText().toString().trim();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            this.cardImage.setImageBitmap(imageBitmap);
+            isPhoto = true;
+        }
+    }
+
+    private void createAccount() {
+
 
         if (!validateForm()) {
             return;
         }
 
         progressBar.setVisibility(View.VISIBLE);
+        singUpButton.setEnabled(false);
 
-        String hassed = md5(password);
-        final Usuario usuario = new Usuario(email, hassed, name);
-        Map<String, Object> usuariotValues = usuario.toMap();
-        mDocRefUsuarios.add(usuariotValues).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                progressBar.setVisibility(View.INVISIBLE);
-                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-                SharedPreferences.Editor editor = settings.edit();
-                editor.putString("userID", documentReference.getId());
+        if(isPhoto){
+            //Creamos una instancia de FirebaseStorage
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            final String email = this.email.getText().toString().trim();
+            // Create a storage reference from our app
+            StorageReference storageRef = storage.getReference();
 
-                // Commit the edits!
-                editor.apply();
+            // Creamos una referencia a la carpeta y el nombre de la imagen donde se guardara
+            StorageReference mountainImagesRef = storageRef.child("tarjetas/"+email+".jpg");
+            Bitmap bitmap = ((BitmapDrawable) this.cardImage.getDrawable()).getBitmap();
+            //Pasamos la imagen a un array de byte
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] datas = baos.toByteArray();
 
-                //Volver a la pantalla principal
-                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                progressBar.setVisibility(View.INVISIBLE);
-                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
-            }
-        });
+            // Empezamos con la subida a Firebase
+            UploadTask uploadTask = mountainImagesRef.putBytes(datas);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    singUpButton.setEnabled(true);
+                    Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    saveUserWithPhoto(taskSnapshot.getMetadata().getPath());
+                }
+            });
+        }else {
+            saveUser();
+        }
+
+
+
     }
 
     //Validación de los parámetros de entrada en el formulario de sing up
@@ -146,10 +215,6 @@ public class SingUpActivity extends AppCompatActivity {
             this.name.setError(null);
         }
 
-        /*String numer = this.cardNumber.getText().toString();
-        if(TextUtils.isEmpty(numer)){
-
-        }*/
 
         return valid;
     }
@@ -163,7 +228,7 @@ public class SingUpActivity extends AppCompatActivity {
 
             // Create Hex String
             StringBuffer hexString = new StringBuffer();
-            for (int i=0; i<messageDigest.length; i++)
+            for (int i = 0; i < messageDigest.length; i++)
                 hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
             return hexString.toString();
 
@@ -171,5 +236,86 @@ public class SingUpActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return "";
+    }
+
+    private void saveUser() {
+        final String email = this.email.getText().toString().trim();
+        final String password = this.password.getText().toString().trim();
+        final String name = this.name.getText().toString().trim();
+
+        String hassed = md5(password);
+        final Usuario usuario;
+        if(!cardNumber.toString().equals("")){
+            usuario = new Usuario(email, hassed, name, cardNumber.toString());
+        }else {
+            usuario = new Usuario(email, hassed, name);
+        }
+        Map<String, Object> usuariotValues = usuario.toMap();
+        mDocRefUsuarios.add(usuariotValues).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                progressBar.setVisibility(View.INVISIBLE);
+                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString(USER_ID, documentReference.getId());
+
+                // Commit the edits!
+                editor.apply();
+
+                //Volver a la pantalla principal
+                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                progressBar.setVisibility(View.INVISIBLE);
+                singUpButton.setEnabled(true);
+                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void saveUserWithPhoto(String photoURL){
+        final String email = this.email.getText().toString().trim();
+        final String password = this.password.getText().toString().trim();
+        final String name = this.name.getText().toString().trim();
+        final String nCard = this.cardNumber.getText().toString().trim();
+
+        String hassed = md5(password);
+        final Usuario usuario;
+        /*if(!cardNumber.toString().equals("") && !isPhoto){
+            usuario = new Usuario(email, hassed, name, cardNumber.toString());
+        }else if (!cardNumber.toString().equals("") && isPhoto){*/
+            usuario = new Usuario(email, hassed, name, nCard, photoURL);
+        /*}else {
+            usuario = new Usuario(email, hassed, name);
+        }*/
+        Map<String, Object> usuariotValues = usuario.toMap();
+        mDocRefUsuarios.add(usuariotValues).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                progressBar.setVisibility(View.INVISIBLE);
+                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString(USER_ID, documentReference.getId());
+
+                // Commit the edits!
+                editor.apply();
+
+                //Volver a la pantalla principal
+                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                progressBar.setVisibility(View.INVISIBLE);
+                singUpButton.setEnabled(true);
+                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

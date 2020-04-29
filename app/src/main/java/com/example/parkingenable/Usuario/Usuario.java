@@ -11,7 +11,7 @@ public class Usuario {
     private String password;
     private String name;
     private String cardNumber;
-    private String cardImage;
+    private String cardURL;
 
     public Usuario(String email, String password, String name) {
         this.email = email;
@@ -26,12 +26,12 @@ public class Usuario {
         this.cardNumber = cardNumber;
     }
 
-    public Usuario(String email, String password, String name, String cardNumber, String cardImage) {
+    public Usuario(String email, String password, String name, String cardNumber, String cardURL) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.cardNumber = cardNumber;
-        this.cardImage = cardImage;
+        this.cardURL = cardURL;
     }
 
     public String getIDusuario() {
@@ -75,11 +75,11 @@ public class Usuario {
     }
 
     public String getCardImage() {
-        return cardImage;
+        return cardURL;
     }
 
     public void setCardImage(String cardImage) {
-        this.cardImage = cardImage;
+        this.cardURL = cardImage;
     }
 
     //Con este mapeo podemos filtrar qué datos de la clase devolver
@@ -91,7 +91,7 @@ public class Usuario {
         result.put("name", name);
         result.put("password", password);
         result.put("cardNumber", cardNumber);
-        result.put("cardImage", cardImage);
+        result.put("cardURL", cardURL);
 
         return result;
     }

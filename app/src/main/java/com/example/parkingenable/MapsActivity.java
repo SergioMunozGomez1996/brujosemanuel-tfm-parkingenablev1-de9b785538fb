@@ -3,6 +3,7 @@ package com.example.parkingenable;
 import android.Manifest;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -74,6 +75,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -119,6 +121,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private CollectionReference mDocRefPlazas = FirebaseFirestore.getInstance().collection("plazas");
     private CollectionReference mDocRefNewParking = FirebaseFirestore.getInstance().collection("ParkingSuggestions");
     public static final String CITY_KEY="ciudad";
+
+    //User's preferences
+    public static final String PREFS_NAME = "MyPrefsFile";
+    public static final String USER_ID = "userID";
+    public static final String SIN_LOGIN = "sinLogin";
 
     //cluster
     private ClusterManager<MyItem>clusterManager;
@@ -172,13 +179,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 showPopupNewParking();
             }
         });
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent  = new Intent(MapsActivity.this, LoginActivity.class);
-                startActivity(intent);
-            }
-        });
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        if(!Objects.equals(settings.getString(USER_ID, SIN_LOGIN), SIN_LOGIN)){
+            loginButton.setIcon(R.drawable.ic_person);
+            loginButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent  = new Intent(MapsActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }else {
+            loginButton.setIcon(R.drawable.ic_person_add);
+            loginButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent  = new Intent(MapsActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
     }
 
     /**

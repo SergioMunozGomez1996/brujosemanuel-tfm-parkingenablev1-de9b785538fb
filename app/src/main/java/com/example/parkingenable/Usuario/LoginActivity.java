@@ -57,7 +57,6 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                progressBar.setVisibility(View.VISIBLE);
                 signIn();
             }
         });
@@ -78,9 +77,11 @@ public class LoginActivity extends AppCompatActivity {
         String hashPassword = md5(password);
 
         if (!validateForm()) {
-            progressBar.setVisibility(View.INVISIBLE);
             return;
         }
+
+        progressBar.setVisibility(View.VISIBLE);
+        loginButton.setEnabled(false);
 
         mDocRefUsuarios.whereEqualTo(EMAIL_KEY, email).whereEqualTo(PASSWORD_KEY, hashPassword).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -101,6 +102,8 @@ public class LoginActivity extends AppCompatActivity {
                                 startActivity(intent);
                             }
                         } else {
+                            progressBar.setVisibility(View.INVISIBLE);
+                            loginButton.setEnabled(true);
                             Log.d(TAG, "Error getting documents: ", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
