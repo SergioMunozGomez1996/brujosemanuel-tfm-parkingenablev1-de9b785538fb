@@ -51,6 +51,7 @@ public class SingUpActivity extends AppCompatActivity {
     //User's preferences
     public static final String PREFS_NAME = "MyPrefsFile";
     public static final String USER_ID = "userID";
+    public static final String AUTO_PARKING = "autoParking";
 
     private ProgressBar progressBar;
     private EditText email;
@@ -126,8 +127,14 @@ public class SingUpActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            Bundle extras = null;
+            if (data != null) {
+                extras = data.getExtras();
+            }
+            Bitmap imageBitmap = null;
+            if (extras != null) {
+                imageBitmap = (Bitmap) extras.get("data");
+            }
             this.cardImage.setImageBitmap(imageBitmap);
             isPhoto = true;
         }
@@ -226,12 +233,11 @@ public class SingUpActivity extends AppCompatActivity {
             // Create MD5 Hash
             MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
             digest.update(s.getBytes());
-            byte messageDigest[] = digest.digest();
+            byte[] messageDigest = digest.digest();
 
             // Create Hex String
-            StringBuffer hexString = new StringBuffer();
-            for (int i = 0; i < messageDigest.length; i++)
-                hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : messageDigest) hexString.append(Integer.toHexString(0xFF & b));
             return hexString.toString();
 
         } catch (NoSuchAlgorithmException e) {
@@ -261,7 +267,7 @@ public class SingUpActivity extends AppCompatActivity {
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putString(USER_ID, documentReference.getId());
-
+                editor.putBoolean(AUTO_PARKING, checkBox.isChecked());
                 // Commit the edits!
                 editor.apply();
 
@@ -299,7 +305,7 @@ public class SingUpActivity extends AppCompatActivity {
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putString(USER_ID, documentReference.getId());
-
+                editor.putBoolean(AUTO_PARKING, checkBox.isChecked());
                 // Commit the edits!
                 editor.apply();
 
