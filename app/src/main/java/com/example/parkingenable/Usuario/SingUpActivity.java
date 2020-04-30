@@ -1,13 +1,8 @@
 package com.example.parkingenable.Usuario;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -22,13 +17,20 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.parkingenable.MapsActivity;
 import com.example.parkingenable.R;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -36,8 +38,6 @@ import com.google.firebase.storage.UploadTask;
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Map;
 
 public class SingUpActivity extends AppCompatActivity {
@@ -46,6 +46,8 @@ public class SingUpActivity extends AppCompatActivity {
 
     //Database
     private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
+    public static final String EMAIL_KEY="email";
+
     //User's preferences
     public static final String PREFS_NAME = "MyPrefsFile";
     public static final String USER_ID = "userID";
@@ -105,7 +107,7 @@ public class SingUpActivity extends AppCompatActivity {
         singUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                createAccount();
+                checkExistEmail();
             }
         });
 
@@ -242,11 +244,12 @@ public class SingUpActivity extends AppCompatActivity {
         final String email = this.email.getText().toString().trim();
         final String password = this.password.getText().toString().trim();
         final String name = this.name.getText().toString().trim();
+        final String cardNumber = this.cardNumber.getText().toString();
 
         String hassed = md5(password);
         final Usuario usuario;
-        if(!cardNumber.toString().equals("")){
-            usuario = new Usuario(email, hassed, name, cardNumber.toString());
+        if(!cardNumber.equals("")){
+            usuario = new Usuario(email, hassed, name, cardNumber);
         }else {
             usuario = new Usuario(email, hassed, name);
         }
@@ -285,13 +288,9 @@ public class SingUpActivity extends AppCompatActivity {
 
         String hassed = md5(password);
         final Usuario usuario;
-        /*if(!cardNumber.toString().equals("") && !isPhoto){
-            usuario = new Usuario(email, hassed, name, cardNumber.toString());
-        }else if (!cardNumber.toString().equals("") && isPhoto){*/
-            usuario = new Usuario(email, hassed, name, nCard, photoURL);
-        /*}else {
-            usuario = new Usuario(email, hassed, name);
-        }*/
+
+        usuario = new Usuario(email, hassed, name, nCard, photoURL);
+
         Map<String, Object> usuariotValues = usuario.toMap();
         mDocRefUsuarios.add(usuariotValues).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
@@ -317,5 +316,27 @@ public class SingUpActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void checkExistEmail(){
+        mDocRefUsuarios.whereEqualTo(EMAIL_KEY, email.getText().toString()).get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            if(task.getResult().size() >= 1){
+                                Toast.makeText(SingUpActivity.this, "Ya existe un usuario con ese email.",
+                                        Toast.LENGTH_SHORT).show();
+                            }else{
+                                createAccount();
+                            }
+
+                        } else {
+                            Toast.makeText(SingUpActivity.this, "Email check failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                });
     }
 }
