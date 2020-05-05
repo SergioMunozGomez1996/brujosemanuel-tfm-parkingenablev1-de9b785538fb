@@ -13,6 +13,8 @@ public class Usuario {
     private String cardNumber;
     private String cardURL;
 
+    public Usuario(){}
+
     public Usuario(String email, String password, String name) {
         this.email = email;
         this.password = password;
@@ -74,12 +76,12 @@ public class Usuario {
         this.cardNumber = cardNumber;
     }
 
-    public String getCardImage() {
+    public String getCardURL() {
         return cardURL;
     }
 
-    public void setCardImage(String cardImage) {
-        this.cardURL = cardImage;
+    public void setCardURL(String cardURL) {
+        this.cardURL = cardURL;
     }
 
     //Con este mapeo podemos filtrar qué datos de la clase devolver

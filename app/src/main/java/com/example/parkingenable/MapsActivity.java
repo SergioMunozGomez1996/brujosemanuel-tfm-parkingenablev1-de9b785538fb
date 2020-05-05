@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.example.parkingenable.Usuario.LoginActivity;
+import com.example.parkingenable.Usuario.UserProfileActivity;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -191,7 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             loginButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent  = new Intent(MapsActivity.this, LoginActivity.class);
+                    Intent intent  = new Intent(MapsActivity.this, UserProfileActivity.class);
                     startActivity(intent);
                 }
             });
