@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.solver.widgets.ChainHead;
 
 import com.example.parkingenable.MapsActivity;
 import com.example.parkingenable.R;
@@ -36,12 +38,15 @@ public class LoginActivity extends AppCompatActivity {
     public static final String PASSWORD_KEY="password";
     //User's preferences
     public static final String PREFS_NAME = "MyPrefsFile";
+    public static final String USER_ID = "userID";
+    public static final String AUTO_PARKING = "autoParking";
 
     private EditText emailUsuario;
     private EditText passwordUsuario;
     private ProgressBar progressBar;
     private Button loginButton;
     private TextView singUpButton;
+    private CheckBox autoParking;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,7 @@ public class LoginActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.login_progressBar);
         loginButton = findViewById(R.id.login_button);
         singUpButton = findViewById(R.id.singUp_textView);
+        autoParking = findViewById(R.id.autoParking_checkBox);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,7 +97,8 @@ public class LoginActivity extends AppCompatActivity {
                             for (QueryDocumentSnapshot usuario : task.getResult()) {
                                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                                 SharedPreferences.Editor editor = settings.edit();
-                                editor.putString("userID", usuario.getId());
+                                editor.putString(USER_ID, usuario.getId());
+                                editor.putBoolean(AUTO_PARKING, autoParking.isChecked());
 
                                 // Commit the edits!
                                 editor.apply();
