@@ -30,11 +30,11 @@
         app:layout_constraintTop_toBottomOf="@+id/appCompatImageView3">
 
         <EditText
-            android:id="@+id/email"
+            android:id="@+id/n_tarjeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Correo"
-            android:inputType="textEmailAddress" />
+            android:hint="Numero tarjeta movilidad reducida"
+            android:inputType="number" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -63,7 +63,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="15dp"
         android:backgroundTint="@color/colorPrimary"
         android:padding="12dp"
@@ -72,7 +72,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/autoParking_checkBox" />
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout3" />
 
     <TextView
         android:id="@+id/singUp_textView"
@@ -101,10 +101,10 @@
         android:id="@+id/autoParking_checkBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginBottom="40dp"
         android:text="Registro automático de aparcamiento"
+        app:layout_constraintBottom_toTopOf="@+id/singUp_textView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textInputLayout3" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

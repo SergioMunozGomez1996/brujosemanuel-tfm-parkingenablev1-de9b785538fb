@@ -12,6 +12,9 @@
         />
 
     <!-- TODO: Update blank fragment layout -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <LinearLayout
         android:id="@+id/titleLayout"
         android:layout_width="match_parent"
@@ -47,16 +50,29 @@
             android:layout_height="wrap_content"
             android:textIsSelectable="true"/>
         <TextView
-            android:id="@+id/numero_tarjeta_title"
+        android:id="@+id/numero_tarjeta_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:layout_marginTop="20dp"
+
+        android:text="Nº tarjeta" />
+        <TextView
+            android:id="@+id/numero_tarjeta_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/date_tarjeta_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:textSize="20sp"
             android:layout_marginTop="20dp"
 
-            android:text="Nº tarjeta" />
+            android:text="Fecha caducidad tarjeta" />
         <TextView
-            android:id="@+id/numero_tarjeta_detail"
+            android:id="@+id/date_tarjeta_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
         <TextView
@@ -72,50 +88,48 @@
             android:layout_width="250dp"
             android:layout_height="250dp"
             android:layout_gravity="center_horizontal"
-            android:src="@drawable/ic_photo_camera"
-            android:background="@color/grayGoogle"
             android:layout_margin="20dp"/>
         <androidx.appcompat.widget.AppCompatCheckBox
             android:id="@+id/autoParking_checkBox"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Registro automático de aparcamiento"/>
+        <LinearLayout
+            android:id="@+id/buttonsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+            <Button
+                android:id="@+id/editar_perfil"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Editar perfil"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"/>
+            <Button
+                android:id="@+id/cerrar_sesion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cerrar sesión"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"/>
+            <Button
+                android:id="@+id/borrar_perfil"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Borrar perfil"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"/>
+
+        </LinearLayout>
 
     </LinearLayout>
+    </ScrollView>
 
-    <LinearLayout
-        android:id="@+id/buttonsLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="bottom"
-        android:layout_alignParentBottom="true"
-        android:visibility="gone">
-        <Button
-            android:id="@+id/editar_perfil"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Editar perfil"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@color/common_google_signin_btn_text_dark_default"/>
-        <Button
-            android:id="@+id/cerrar_sesion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cerrar sesión"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@color/common_google_signin_btn_text_dark_default"/>
-        <Button
-            android:id="@+id/borrar_perfil"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Borrar perfil"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@color/common_google_signin_btn_text_dark_default"/>
 
-    </LinearLayout>
 
 </RelativeLayout>

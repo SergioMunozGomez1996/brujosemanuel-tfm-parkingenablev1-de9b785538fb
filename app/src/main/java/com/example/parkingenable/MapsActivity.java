@@ -303,6 +303,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.w(TAG, "Listen failed, " , e);
                 }
 
+                mMap.clear();
                 for(QueryDocumentSnapshot plaza: value){
                     if(plaza.get("calle")!=null){
                         Integer plazaID = Integer.parseInt(plaza.getId());

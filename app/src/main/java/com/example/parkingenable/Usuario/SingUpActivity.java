@@ -1,5 +1,6 @@
 package com.example.parkingenable.Usuario;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -12,6 +13,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -27,6 +29,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,7 +41,8 @@ import com.google.firebase.storage.UploadTask;
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class SingUpActivity extends AppCompatActivity {
 
@@ -46,7 +50,7 @@ public class SingUpActivity extends AppCompatActivity {
 
     //Database
     private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
-    public static final String EMAIL_KEY="email";
+    public static final String CARD_KEY ="numeroTarjeta";
 
     //User's preferences
     public static final String PREFS_NAME = "MyPrefsFile";
@@ -56,15 +60,18 @@ public class SingUpActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private EditText email;
     private EditText name;
+    private EditText surname;
     private EditText password;
     private EditText repPassword;
     private EditText cardNumber;
+    private EditText dateCard;
     private Button cameraButton;
     private ImageView cardImage;
     private CheckBox checkBox;
     private Button singUpButton;
 
     private boolean isPhoto = false;
+    private Timestamp fechaExpiracionTarjeta;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,9 +81,11 @@ public class SingUpActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.singUp_progressBar);
         email = findViewById(R.id.email);
         name = findViewById(R.id.name);
+        surname = findViewById(R.id.surname);
         password = findViewById(R.id.password);
         repPassword = findViewById(R.id.reEnterPassword);
         cardNumber = findViewById(R.id.n_tarjeta);
+        dateCard = findViewById(R.id.date_tarjeta);
         cameraButton = findViewById(R.id.photo_button);
         cardImage = findViewById(R.id.tarjeta_ImageView);
         checkBox = findViewById(R.id.autoParking_checkBox);
@@ -108,7 +117,7 @@ public class SingUpActivity extends AppCompatActivity {
         singUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                checkExistEmail();
+                checkExistCard();
             }
         });
 
@@ -119,6 +128,13 @@ public class SingUpActivity extends AppCompatActivity {
                 if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
+            }
+        });
+
+        dateCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDatePickerDialog();
             }
         });
     }
@@ -150,39 +166,35 @@ public class SingUpActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         singUpButton.setEnabled(false);
 
-        if(isPhoto){
-            //Creamos una instancia de FirebaseStorage
-            FirebaseStorage storage = FirebaseStorage.getInstance();
-            final String email = this.email.getText().toString().trim();
-            // Create a storage reference from our app
-            StorageReference storageRef = storage.getReference();
+        //Creamos una instancia de FirebaseStorage
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        final String cardNumber = this.cardNumber.getText().toString().trim();
+        // Create a storage reference from our app
+        StorageReference storageRef = storage.getReference();
 
-            // Creamos una referencia a la carpeta y el nombre de la imagen donde se guardara
-            StorageReference mountainImagesRef = storageRef.child("tarjetas/"+email+".jpg");
-            Bitmap bitmap = ((BitmapDrawable) this.cardImage.getDrawable()).getBitmap();
-            //Pasamos la imagen a un array de byte
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] datas = baos.toByteArray();
+        // Creamos una referencia a la carpeta y el nombre de la imagen donde se guardara
+        StorageReference mountainImagesRef = storageRef.child("tarjetas/"+cardNumber+".jpg");
+        Bitmap bitmap = ((BitmapDrawable) this.cardImage.getDrawable()).getBitmap();
+        //Pasamos la imagen a un array de byte
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] datas = baos.toByteArray();
 
-            // Empezamos con la subida a Firebase
-            UploadTask uploadTask = mountainImagesRef.putBytes(datas);
-            uploadTask.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    progressBar.setVisibility(View.INVISIBLE);
-                    singUpButton.setEnabled(true);
-                    Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
-                }
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    saveUserWithPhoto(taskSnapshot.getMetadata().getPath());
-                }
-            });
-        }else {
-            saveUser();
-        }
+        // Empezamos con la subida a Firebase
+        UploadTask uploadTask = mountainImagesRef.putBytes(datas);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                progressBar.setVisibility(View.INVISIBLE);
+                singUpButton.setEnabled(true);
+                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                saveUserWithPhoto(taskSnapshot.getMetadata().getPath());
+            }
+        });
 
 
 
@@ -194,10 +206,29 @@ public class SingUpActivity extends AppCompatActivity {
 
         String email = this.email.getText().toString();
         if (TextUtils.isEmpty(email) || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Introduce un email válido", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Introduce un email válido", Toast.LENGTH_LONG).show();
+            this.email.setError("Introduce un email válido");
             valid = false;
         } else {
             this.email.setError(null);
+        }
+
+        String name = this.name.getText().toString();
+        if (TextUtils.isEmpty(name)) {
+            //Toast.makeText(this, "Nombre requerido", Toast.LENGTH_LONG).show();
+            this.name.setError("Nombre requerido");
+            valid = false;
+        } else {
+            this.name.setError(null);
+        }
+
+        String surname = this.surname.getText().toString();
+        if (TextUtils.isEmpty(surname)) {
+            //Toast.makeText(this, "Apellidos requeridos", Toast.LENGTH_LONG).show();
+            this.surname.setError("Apellidos requeridos");
+            valid = false;
+        } else {
+            this.surname.setError(null);
         }
 
         String password = this.password.getText().toString();
@@ -216,12 +247,26 @@ public class SingUpActivity extends AppCompatActivity {
             this.repPassword.setError(null);
         }
 
-        String name = this.name.getText().toString();
-        if (TextUtils.isEmpty(name)) {
-            Toast.makeText(this, "Nombre requerido", Toast.LENGTH_LONG).show();
+        String cardNumber = this.cardNumber.getText().toString();
+        if (TextUtils.isEmpty(cardNumber)) {
+            //Toast.makeText(this, "Número de tarjeta requerida", Toast.LENGTH_LONG).show();
+            this.cardNumber.setError("Número de tarjeta requerido");
             valid = false;
         } else {
-            this.name.setError(null);
+            this.surname.setError(null);
+        }
+
+        String dateCard = this.dateCard.getText().toString();
+        if (TextUtils.isEmpty(dateCard)) {
+            this.dateCard.setError("Fecha de caducidad requerida");
+            valid = false;
+        } else {
+            this.surname.setError(null);
+        }
+
+        if(!isPhoto){
+            Toast.makeText(this, "Foto de tarjeta requerida", Toast.LENGTH_LONG).show();
+            valid = false;
         }
 
 
@@ -246,7 +291,7 @@ public class SingUpActivity extends AppCompatActivity {
         return "";
     }
 
-    private void saveUser() {
+    /*private void saveUser() {
         final String email = this.email.getText().toString().trim();
         final String password = this.password.getText().toString().trim();
         final String name = this.name.getText().toString().trim();
@@ -284,21 +329,23 @@ public class SingUpActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
             }
         });
-    }
+    }*/
 
     private void saveUserWithPhoto(String photoURL){
         final String email = this.email.getText().toString().trim();
         final String password = this.password.getText().toString().trim();
         final String name = this.name.getText().toString().trim();
-        final String nCard = this.cardNumber.getText().toString().trim();
+        final String surname = this.surname.getText().toString().trim();
+        final String cNumber = this.cardNumber.getText().toString().trim();
+        final Timestamp cardDate = fechaExpiracionTarjeta;
 
         String hassed = md5(password);
         final Usuario usuario;
 
-        usuario = new Usuario(email, hassed, name, nCard, photoURL);
-
-        Map<String, Object> usuariotValues = usuario.toMap();
-        mDocRefUsuarios.add(usuariotValues).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+        usuario = new Usuario(email, hassed, name, surname, cNumber, cardDate,photoURL);
+        usuario.setFechaCreacion(Timestamp.now());
+        //Map<String, Object> usuariotValues = usuario.toMap();
+        mDocRefUsuarios.add(usuario).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
                 progressBar.setVisibility(View.INVISIBLE);
@@ -324,25 +371,46 @@ public class SingUpActivity extends AppCompatActivity {
         });
     }
 
-    private void checkExistEmail(){
-        mDocRefUsuarios.whereEqualTo(EMAIL_KEY, email.getText().toString()).get()
+    private void checkExistCard(){
+        mDocRefUsuarios.whereEqualTo(CARD_KEY, cardNumber.getText().toString()).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             if(task.getResult().size() >= 1){
-                                Toast.makeText(SingUpActivity.this, "Ya existe un usuario con ese email.",
+                                Toast.makeText(SingUpActivity.this, "Ya existe un usuario con esta tarjeta.",
                                         Toast.LENGTH_SHORT).show();
                             }else{
                                 createAccount();
                             }
 
                         } else {
-                            Toast.makeText(SingUpActivity.this, "Email check failed.",
+                            Toast.makeText(SingUpActivity.this, "Card check failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
 
                 });
+    }
+
+
+    private void showDatePickerDialog() {
+        DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                // +1 because january is zero
+                final String selectedDate = twoDigits(day) + "/" + twoDigits(month + 1) + "/" + twoDigits(year);
+                dateCard.setText(selectedDate);
+                Calendar calendar = new GregorianCalendar(year, month, day);
+                calendar.getTimeInMillis();
+                fechaExpiracionTarjeta = new Timestamp(calendar.getTime());
+            }
+        });
+        newFragment.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    //Es para que los días o meses se muestren a 2 dígitos.
+    private String twoDigits(int n) {
+        return (n <= 9) ? ("0" + n) : String.valueOf(n);
     }
 }

@@ -20,7 +20,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Usuario.UserProfileActivity"></activity>
+        <activity android:name=".Usuario.UserEditActivity"></activity>
+        <activity android:name=".Usuario.UserProfileActivity" />
         <activity android:name=".Usuario.SingUpActivity" />
         <activity android:name=".Usuario.LoginActivity" />
         <activity android:name=".MapsActivity" />

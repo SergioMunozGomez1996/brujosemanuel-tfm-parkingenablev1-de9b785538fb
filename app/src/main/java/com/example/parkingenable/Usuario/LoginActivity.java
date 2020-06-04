@@ -15,7 +15,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.solver.widgets.ChainHead;
 
 import com.example.parkingenable.MapsActivity;
 import com.example.parkingenable.R;
@@ -34,26 +33,27 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     //Database
     private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
-    public static final String EMAIL_KEY="email";
+    public static final String CARD_KEY ="numeroTarjeta";
     public static final String PASSWORD_KEY="password";
     //User's preferences
     public static final String PREFS_NAME = "MyPrefsFile";
     public static final String USER_ID = "userID";
     public static final String AUTO_PARKING = "autoParking";
 
-    private EditText emailUsuario;
+    private EditText tarjetaUsuario;
     private EditText passwordUsuario;
     private ProgressBar progressBar;
     private Button loginButton;
     private TextView singUpButton;
     private CheckBox autoParking;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        emailUsuario = findViewById(R.id.email);
+        tarjetaUsuario = findViewById(R.id.n_tarjeta);
         passwordUsuario = findViewById(R.id.password);
         progressBar = findViewById(R.id.login_progressBar);
         loginButton = findViewById(R.id.login_button);
@@ -78,7 +78,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void signIn() {
-        String email = emailUsuario.getText().toString();
+        String tarjeta = tarjetaUsuario.getText().toString();
         String password = passwordUsuario.getText().toString();
         String hashPassword = md5(password);
 
@@ -89,7 +89,7 @@ public class LoginActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         loginButton.setEnabled(false);
 
-        mDocRefUsuarios.whereEqualTo(EMAIL_KEY, email).whereEqualTo(PASSWORD_KEY, hashPassword).get()
+        mDocRefUsuarios.whereEqualTo(CARD_KEY, tarjeta).whereEqualTo(PASSWORD_KEY, hashPassword).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -123,12 +123,12 @@ public class LoginActivity extends AppCompatActivity {
     private boolean validateForm() {
         boolean valid = true;
 
-        String email = emailUsuario.getText().toString();
-        if (TextUtils.isEmpty(email)|| !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailUsuario.setError("Introduce un email válido");
+        String tarjeta = tarjetaUsuario.getText().toString();
+        if (TextUtils.isEmpty(tarjeta)) {
+            tarjetaUsuario.setError("Introduce una tarjeta válida");
             valid = false;
         } else {
-            emailUsuario.setError(null);
+            tarjetaUsuario.setError(null);
         }
 
         String password = passwordUsuario.getText().toString();

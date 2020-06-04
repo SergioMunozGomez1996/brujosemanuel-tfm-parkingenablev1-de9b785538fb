@@ -1,13 +1,16 @@
 package com.example.parkingenable.Usuario;
 
-import android.content.Context;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -24,9 +27,14 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Objects;
 
 public class UserProfileActivity extends AppCompatActivity {
@@ -39,6 +47,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     //Database
     private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
+    private CollectionReference mDocRefHistoricoUsuarios = FirebaseFirestore.getInstance().collection("historicoUsuarios");
 
     //Creamos una instancia de FirebaseStorage
     StorageReference storageRef = FirebaseStorage.getInstance().getReference();
@@ -46,12 +55,14 @@ public class UserProfileActivity extends AppCompatActivity {
     private TextView userName;
     private TextView userEmail;
     private TextView userNumerCard;
+    private TextView userDateCard;
     private ImageView userCardImage;
     private CheckBox autoParking;
 
     private String userId;
 
-    private Context mContext;
+    private String userPassword;
+    private Usuario usuario;
 
     private SharedPreferences settings;
 
@@ -68,6 +79,7 @@ public class UserProfileActivity extends AppCompatActivity {
         userName = findViewById(R.id.nombre_detail);
         userEmail = findViewById(R.id.correo_detail);
         userNumerCard = findViewById(R.id.numero_tarjeta_detail);
+        userDateCard = findViewById(R.id.date_tarjeta_detail);
         userCardImage = findViewById(R.id.foto_tarjeta_imagen);
         titleLayuout = findViewById(R.id.titleLayout);
         buttonsLayout = findViewById(R.id.buttonsLayout);
@@ -98,10 +110,13 @@ public class UserProfileActivity extends AppCompatActivity {
             MyProfileEditFragment myProfileEditFragment = new MyProfileEditFragment();
             getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.content_main, myProfileEditFragment).addToBackStack(null).commit();
         });
-
-        borrarButton.setOnClickListener(v -> {
-            confirmarBorrarPerfil();
-        });*/
+        */
+        borrarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                confirmarBorrarPerfil();
+            }
+        });
 
         settings = getSharedPreferences(PREFS_NAME, 0);
         autoParking.setChecked(settings.getBoolean(AUTO_PARKING, false));
@@ -112,19 +127,23 @@ public class UserProfileActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(DocumentSnapshot documentSnapshot) {
                     progressBar.setVisibility(View.INVISIBLE);
-                    Usuario usuario = documentSnapshot.toObject(Usuario.class);
+                    usuario = documentSnapshot.toObject(Usuario.class);
                     if(usuario != null) {
-                        if (usuario.getName() != null) {
-                            userName.setText(usuario.getName());
+                        if (usuario.getNombre() != null) {
+                            userName.setText(usuario.getNombre());
                         }
-                        if (usuario.getEmail() != null) {
-                            userEmail.setText(usuario.getEmail());
+                        if (usuario.getCorreo() != null) {
+                            userEmail.setText(usuario.getCorreo());
                         }
-                        if (usuario.getCardNumber() != null) {
-                            userNumerCard.setText(usuario.getCardNumber());
+                        if (usuario.getNumeroTarjeta() != null) {
+                            userNumerCard.setText(usuario.getNumeroTarjeta());
                         }
-                        if (usuario.getCardURL() != null) {
-                            storageRef.child(usuario.getCardURL()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        if (usuario.getFechaCaducidadTarjeta() != null) {
+                            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                            userDateCard.setText(formatter.format(usuario.getFechaCaducidadTarjeta().toDate()));
+                        }
+                        if (usuario.getFotoURL() != null) {
+                            storageRef.child(usuario.getFotoURL()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
                                     Glide.with(getBaseContext())
@@ -133,6 +152,9 @@ public class UserProfileActivity extends AppCompatActivity {
                                 }
                             });
                         }
+
+                        if(usuario.getPassword() != null)
+                            userPassword = usuario.getPassword();
                     }
 
                     titleLayuout.setVisibility(View.VISIBLE);
@@ -148,6 +170,81 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
+    private void confirmarBorrarPerfil() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+        builder.setTitle("Confirmación");
+        builder.setMessage("¿Seguro que quieres borrar tu perfil?");
+        builder.setIcon(R.drawable.ic_delete);
+        View dialogView = inflater.inflate(R.layout.delete_profile_dialog, null);
+        builder.setView(dialogView);
+        final EditText alertPassword = dialogView.findViewById(R.id.alert_password);
+        builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if(userPassword.equals(md5(alertPassword.getText().toString()))){
+                    progressBar.setActivated(true);
+                    // Get a new write batch
+                    WriteBatch batch = FirebaseFirestore.getInstance().batch();
+                    batch.delete(mDocRefUsuarios.document(userId));
+                    //batch.update(mDocRefHistoricoUsuarios.document(userId),usuario.toMap());
+                    batch.set(mDocRefHistoricoUsuarios.document(userId),usuario.toMap());
+                    batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            settings = getSharedPreferences(PREFS_NAME, 0);
+                            SharedPreferences.Editor editor = settings.edit();
+                            editor.clear();
+                            editor.apply();
+
+                            //Volver a la pantalla principal
+                            Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getBaseContext(),"Error en el borrado", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    /*mDocRefUsuarios.document(userId)
+                            .delete()
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    settings = getSharedPreferences(PREFS_NAME, 0);
+                                    SharedPreferences.Editor editor = settings.edit();
+                                    editor.clear();
+                                    editor.apply();
+
+                                    //Volver a la pantalla principal
+                                    Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    startActivity(intent);
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(getBaseContext(),"Error en el borrado", Toast.LENGTH_SHORT).show();
+                                }
+                            });*/
+                }else
+                    Toast.makeText(getBaseContext(),"Contraseña no válida", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
+
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -156,5 +253,24 @@ public class UserProfileActivity extends AppCompatActivity {
         editor.putBoolean(AUTO_PARKING, autoParking.isChecked());
         // Commit the edits!
         editor.apply();
+    }
+
+    public String md5(String s) {
+        try {
+            // Create MD5 Hash
+            MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+            digest.update(s.getBytes());
+            byte messageDigest[] = digest.digest();
+
+            // Create Hex String
+            StringBuffer hexString = new StringBuffer();
+            for (int i = 0; i < messageDigest.length; i++)
+                hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }
