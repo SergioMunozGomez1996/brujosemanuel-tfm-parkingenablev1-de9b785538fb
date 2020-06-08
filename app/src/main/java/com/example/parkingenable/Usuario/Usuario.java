@@ -47,14 +47,13 @@ public class Usuario {
 
     public Usuario(){}
 
-    public Usuario(String correo, String password, String nombre, String apellidos, String numeroTarjeta, Timestamp fechaCaducidadTarjeta, String fotoURL) {
+    public Usuario(String correo, String password, String nombre, String apellidos, String numeroTarjeta, Timestamp fechaCaducidadTarjeta) {
         this.correo = correo;
         this.password = password;
         this.nombre = nombre;
         this.apellidos = apellidos;
         this.numeroTarjeta = numeroTarjeta;
         this.fechaCaducidadTarjeta = fechaCaducidadTarjeta;
-        this.fotoURL = fotoURL;
     }
 
     /*public String getIDusuario() {

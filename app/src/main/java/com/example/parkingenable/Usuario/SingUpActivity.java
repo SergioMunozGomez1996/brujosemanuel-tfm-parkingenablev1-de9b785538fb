@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
@@ -34,6 +35,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -43,6 +45,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 
 public class SingUpActivity extends AppCompatActivity {
 
@@ -72,6 +75,7 @@ public class SingUpActivity extends AppCompatActivity {
 
     private boolean isPhoto = false;
     private Timestamp fechaExpiracionTarjeta;
+    private String userID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,38 +170,7 @@ public class SingUpActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         singUpButton.setEnabled(false);
 
-        //Creamos una instancia de FirebaseStorage
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        final String cardNumber = this.cardNumber.getText().toString().trim();
-        // Create a storage reference from our app
-        StorageReference storageRef = storage.getReference();
-
-        // Creamos una referencia a la carpeta y el nombre de la imagen donde se guardara
-        StorageReference mountainImagesRef = storageRef.child("tarjetas/"+cardNumber+".jpg");
-        Bitmap bitmap = ((BitmapDrawable) this.cardImage.getDrawable()).getBitmap();
-        //Pasamos la imagen a un array de byte
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] datas = baos.toByteArray();
-
-        // Empezamos con la subida a Firebase
-        UploadTask uploadTask = mountainImagesRef.putBytes(datas);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                progressBar.setVisibility(View.INVISIBLE);
-                singUpButton.setEnabled(true);
-                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                saveUserWithPhoto(taskSnapshot.getMetadata().getPath());
-            }
-        });
-
-
-
+        saveUser();
     }
 
     //Validación de los parámetros de entrada en el formulario de sing up
@@ -206,7 +179,6 @@ public class SingUpActivity extends AppCompatActivity {
 
         String email = this.email.getText().toString();
         if (TextUtils.isEmpty(email) || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            //Toast.makeText(this, "Introduce un email válido", Toast.LENGTH_LONG).show();
             this.email.setError("Introduce un email válido");
             valid = false;
         } else {
@@ -215,7 +187,6 @@ public class SingUpActivity extends AppCompatActivity {
 
         String name = this.name.getText().toString();
         if (TextUtils.isEmpty(name)) {
-            //Toast.makeText(this, "Nombre requerido", Toast.LENGTH_LONG).show();
             this.name.setError("Nombre requerido");
             valid = false;
         } else {
@@ -224,7 +195,6 @@ public class SingUpActivity extends AppCompatActivity {
 
         String surname = this.surname.getText().toString();
         if (TextUtils.isEmpty(surname)) {
-            //Toast.makeText(this, "Apellidos requeridos", Toast.LENGTH_LONG).show();
             this.surname.setError("Apellidos requeridos");
             valid = false;
         } else {
@@ -249,11 +219,10 @@ public class SingUpActivity extends AppCompatActivity {
 
         String cardNumber = this.cardNumber.getText().toString();
         if (TextUtils.isEmpty(cardNumber)) {
-            //Toast.makeText(this, "Número de tarjeta requerida", Toast.LENGTH_LONG).show();
             this.cardNumber.setError("Número de tarjeta requerido");
             valid = false;
         } else {
-            this.surname.setError(null);
+            this.cardNumber.setError(null);
         }
 
         String dateCard = this.dateCard.getText().toString();
@@ -261,11 +230,11 @@ public class SingUpActivity extends AppCompatActivity {
             this.dateCard.setError("Fecha de caducidad requerida");
             valid = false;
         } else {
-            this.surname.setError(null);
+            this.dateCard.setError(null);
         }
 
         if(!isPhoto){
-            Toast.makeText(this, "Foto de tarjeta requerida", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Foto de tarjeta requerida", Toast.LENGTH_SHORT).show();
             valid = false;
         }
 
@@ -291,47 +260,7 @@ public class SingUpActivity extends AppCompatActivity {
         return "";
     }
 
-    /*private void saveUser() {
-        final String email = this.email.getText().toString().trim();
-        final String password = this.password.getText().toString().trim();
-        final String name = this.name.getText().toString().trim();
-        final String cardNumber = this.cardNumber.getText().toString();
-
-        String hassed = md5(password);
-        final Usuario usuario;
-        if(!cardNumber.equals("")){
-            usuario = new Usuario(email, hassed, name, cardNumber);
-        }else {
-            usuario = new Usuario(email, hassed, name);
-        }
-        Map<String, Object> usuariotValues = usuario.toMap();
-        mDocRefUsuarios.add(usuariotValues).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                progressBar.setVisibility(View.INVISIBLE);
-                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-                SharedPreferences.Editor editor = settings.edit();
-                editor.putString(USER_ID, documentReference.getId());
-                editor.putBoolean(AUTO_PARKING, checkBox.isChecked());
-                // Commit the edits!
-                editor.apply();
-
-                //Volver a la pantalla principal
-                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                progressBar.setVisibility(View.INVISIBLE);
-                singUpButton.setEnabled(true);
-                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }*/
-
-    private void saveUserWithPhoto(String photoURL){
+    private void saveUser(){
         final String email = this.email.getText().toString().trim();
         final String password = this.password.getText().toString().trim();
         final String name = this.name.getText().toString().trim();
@@ -342,20 +271,73 @@ public class SingUpActivity extends AppCompatActivity {
         String hassed = md5(password);
         final Usuario usuario;
 
-        usuario = new Usuario(email, hassed, name, surname, cNumber, cardDate,photoURL);
+        usuario = new Usuario(email, hassed, name, surname, cNumber, cardDate);
         usuario.setFechaCreacion(Timestamp.now());
         //Map<String, Object> usuariotValues = usuario.toMap();
         mDocRefUsuarios.add(usuario).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
-                progressBar.setVisibility(View.INVISIBLE);
+                userID = documentReference.getId();
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                 SharedPreferences.Editor editor = settings.edit();
-                editor.putString(USER_ID, documentReference.getId());
+                editor.putString(USER_ID, userID);
                 editor.putBoolean(AUTO_PARKING, checkBox.isChecked());
                 // Commit the edits!
                 editor.apply();
 
+                saveStoragePhoto();
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                progressBar.setVisibility(View.INVISIBLE);
+                singUpButton.setEnabled(true);
+                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void saveStoragePhoto(){
+        //Creamos una instancia de FirebaseStorage
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        final String cardNumber = this.cardNumber.getText().toString().trim();
+        // Create a storage reference from our app
+        StorageReference storageRef = storage.getReference();
+
+        // Creamos una referencia a la carpeta y el nombre de la imagen donde se guardara
+        StorageReference mountainImagesRef = storageRef.child("tarjetas/"+ userID+"/"+cardNumber+".jpg");
+        Bitmap bitmap = ((BitmapDrawable) this.cardImage.getDrawable()).getBitmap();
+        //Pasamos la imagen a un array de byte
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] datas = baos.toByteArray();
+
+        // Empezamos con la subida a Firebase
+        UploadTask uploadTask = mountainImagesRef.putBytes(datas);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                progressBar.setVisibility(View.INVISIBLE);
+                singUpButton.setEnabled(true);
+                Toast.makeText(getBaseContext(), "ERROR al guardar foto", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                savePhotoURL(taskSnapshot.getMetadata().getPath());
+            }
+        });
+    }
+
+    private void savePhotoURL(String path){
+        WriteBatch batch = FirebaseFirestore.getInstance().batch();
+        HashMap<String, Object> usuario = new HashMap<>();
+        usuario.put("fotoURL", path);
+        batch.update(mDocRefUsuarios.document(userID), usuario);
+        batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
                 //Volver a la pantalla principal
                 Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -364,9 +346,7 @@ public class SingUpActivity extends AppCompatActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                progressBar.setVisibility(View.INVISIBLE);
-                singUpButton.setEnabled(true);
-                Toast.makeText(getBaseContext(), "ERROR en el registro", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getBaseContext(),"Error al fijar url de la foto", Toast.LENGTH_SHORT).show();
             }
         });
     }

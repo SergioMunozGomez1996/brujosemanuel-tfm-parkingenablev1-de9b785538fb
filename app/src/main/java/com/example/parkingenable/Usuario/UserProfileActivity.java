@@ -22,8 +22,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.example.parkingenable.MapsActivity;
 import com.example.parkingenable.R;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -53,6 +55,7 @@ public class UserProfileActivity extends AppCompatActivity {
     StorageReference storageRef = FirebaseStorage.getInstance().getReference();
 
     private TextView userName;
+    private TextView userSurname;
     private TextView userEmail;
     private TextView userNumerCard;
     private TextView userDateCard;
@@ -77,6 +80,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
         //Inicializar variables de usuario
         userName = findViewById(R.id.nombre_detail);
+        userSurname = findViewById(R.id.surname_detail);
         userEmail = findViewById(R.id.correo_detail);
         userNumerCard = findViewById(R.id.numero_tarjeta_detail);
         userDateCard = findViewById(R.id.date_tarjeta_detail);
@@ -94,23 +98,17 @@ public class UserProfileActivity extends AppCompatActivity {
         singoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                settings = getSharedPreferences(PREFS_NAME, 0);
-                SharedPreferences.Editor editor = settings.edit();
-                editor.clear();
-                editor.apply();
-
-                //Volver a la pantalla principal
-                Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+                cerrarSesion();
             }
         });
 
-        /*editarButton.setOnClickListener(v -> {
-            MyProfileEditFragment myProfileEditFragment = new MyProfileEditFragment();
-            getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.content_main, myProfileEditFragment).addToBackStack(null).commit();
+        editarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent  = new Intent(UserProfileActivity.this, UserEditActivity.class);
+                startActivity(intent);
+            }
         });
-        */
         borrarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -120,54 +118,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
         settings = getSharedPreferences(PREFS_NAME, 0);
         autoParking.setChecked(settings.getBoolean(AUTO_PARKING, false));
-        if(!Objects.equals(settings.getString(USER_ID, SIN_LOGIN), SIN_LOGIN)){
-            userId = settings.getString(USER_ID, SIN_LOGIN);
 
-            mDocRefUsuarios.document(userId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                @Override
-                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                    progressBar.setVisibility(View.INVISIBLE);
-                    usuario = documentSnapshot.toObject(Usuario.class);
-                    if(usuario != null) {
-                        if (usuario.getNombre() != null) {
-                            userName.setText(usuario.getNombre());
-                        }
-                        if (usuario.getCorreo() != null) {
-                            userEmail.setText(usuario.getCorreo());
-                        }
-                        if (usuario.getNumeroTarjeta() != null) {
-                            userNumerCard.setText(usuario.getNumeroTarjeta());
-                        }
-                        if (usuario.getFechaCaducidadTarjeta() != null) {
-                            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-                            userDateCard.setText(formatter.format(usuario.getFechaCaducidadTarjeta().toDate()));
-                        }
-                        if (usuario.getFotoURL() != null) {
-                            storageRef.child(usuario.getFotoURL()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    Glide.with(getBaseContext())
-                                            .load(uri)
-                                            .into(userCardImage);
-                                }
-                            });
-                        }
-
-                        if(usuario.getPassword() != null)
-                            userPassword = usuario.getPassword();
-                    }
-
-                    titleLayuout.setVisibility(View.VISIBLE);
-                    buttonsLayout.setVisibility(View.VISIBLE);
-
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(getBaseContext(), "Error al cargar el perfil", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
     }
 
     private void confirmarBorrarPerfil() {
@@ -246,6 +197,12 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        cargarPerfil();
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -253,6 +210,66 @@ public class UserProfileActivity extends AppCompatActivity {
         editor.putBoolean(AUTO_PARKING, autoParking.isChecked());
         // Commit the edits!
         editor.apply();
+    }
+
+    private void cargarPerfil(){
+        if(!Objects.equals(settings.getString(USER_ID, SIN_LOGIN), SIN_LOGIN)){
+            userId = settings.getString(USER_ID, SIN_LOGIN);
+
+            mDocRefUsuarios.document(userId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                @Override
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    usuario = documentSnapshot.toObject(Usuario.class);
+                    if(usuario != null) {
+                        if (usuario.getNombre() != null) {
+                            userName.setText(usuario.getNombre());
+                        }
+                        if (usuario.getApellidos() != null) {
+                            userSurname.setText(usuario.getApellidos());
+                        }
+                        if (usuario.getCorreo() != null) {
+                            userEmail.setText(usuario.getCorreo());
+                        }
+                        if (usuario.getNumeroTarjeta() != null) {
+                            userNumerCard.setText(usuario.getNumeroTarjeta());
+                        }
+                        if (usuario.getFechaCaducidadTarjeta() != null) {
+                            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                            userDateCard.setText(formatter.format(usuario.getFechaCaducidadTarjeta().toDate()));
+                        }
+                        if (usuario.getFotoURL() != null) {
+                            storageRef.child(usuario.getFotoURL()).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    Glide.with(getBaseContext())
+                                            .load(uri)
+                                            .into(userCardImage);
+                                }
+                            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Uri> task) {
+                                    progressBar.setVisibility(View.INVISIBLE);
+                                    titleLayuout.setVisibility(View.VISIBLE);
+                                    buttonsLayout.setVisibility(View.VISIBLE);
+                                }
+                            });
+                        }
+
+                        if(usuario.getPassword() != null)
+                            userPassword = usuario.getPassword();
+
+                    }else{
+                        cerrarSesion();
+                        Toast.makeText(getBaseContext(), "Usuario no encontrado", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getBaseContext(), "Error al cargar el perfil", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     public String md5(String s) {
@@ -272,5 +289,17 @@ public class UserProfileActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return "";
+    }
+
+    private void cerrarSesion(){
+        settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.clear();
+        editor.apply();
+
+        //Volver a la pantalla principal
+        Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
     }
 }

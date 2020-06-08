@@ -37,6 +37,19 @@
             android:layout_height="wrap_content"
             android:textIsSelectable="true"/>
         <TextView
+            android:id="@+id/surname_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:layout_marginTop="20dp"
+            android:text="Apellidos" />
+        <TextView
+            android:id="@+id/surname_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"/>
+        <TextView
             android:id="@+id/correo_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -88,7 +101,8 @@
             android:layout_width="250dp"
             android:layout_height="250dp"
             android:layout_gravity="center_horizontal"
-            android:layout_margin="20dp"/>
+            android:layout_margin="20dp"
+            android:src="@drawable/ic_photo_camera_black"/>
         <androidx.appcompat.widget.AppCompatCheckBox
             android:id="@+id/autoParking_checkBox"
             android:layout_height="wrap_content"

@@ -116,6 +116,11 @@
                     android:hint="Nº tarjeta movilida reducida" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
             <EditText android:id="@+id/date_tarjeta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -126,6 +131,7 @@
                 android:focusable="false"
                 android:clickable="true"
                 android:maxLines="1"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/photo_button"

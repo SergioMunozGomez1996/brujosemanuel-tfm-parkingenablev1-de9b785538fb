@@ -10,7 +10,6 @@
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
         android:elevation="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -19,7 +18,8 @@
     <ScrollView
         android:id="@+id/editLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:visibility="gone">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,99 +27,106 @@
             android:paddingLeft="24dp"
             android:paddingTop="20dp"
             android:paddingRight="24dp">
-            <TextView
-                android:id="@+id/nombre_title"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:text="Nombre" />
-            <EditText
-                android:id="@+id/nombre_edit"
+                android:layout_height="wrap_content">
+                <EditText android:id="@+id/email"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:hint="Email" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"/>
-            <TextView
-                android:id="@+id/contraseña_actual_title"
+                android:layout_height="wrap_content">
+                <EditText android:id="@+id/name"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:hint="Nombre" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:layout_marginTop="20dp"
-                android:text="Escribe la contraseña actual" />
+                android:layout_height="wrap_content">
+                <EditText android:id="@+id/surname"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:hint="Apellidos" />
+            </com.google.android.material.textfield.TextInputLayout>
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:passwordToggleEnabled="true"
-                app:passwordToggleDrawable="@drawable/ic_eye">
-                <EditText
-                    android:id="@+id/contraseña_actual_edit"
+                app:passwordToggleDrawable="@drawable/ic_eye"
+                app:passwordToggleEnabled="true">
+                <EditText android:id="@+id/current_password"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
-                    android:singleLine="true"/>
+                    android:hint="Contraseña actual"/>
             </com.google.android.material.textfield.TextInputLayout>
-
-            <TextView
-                android:id="@+id/contraseña_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:layout_marginTop="20dp"
-                android:text="Indica la nueva contraseña" />
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:passwordToggleEnabled="true"
-                app:passwordToggleDrawable="@drawable/ic_eye">
-                <EditText
-                    android:id="@+id/contraseña_edit"
+                app:passwordToggleDrawable="@drawable/ic_eye"
+                app:passwordToggleEnabled="true">
+                <EditText android:id="@+id/new_password"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
-                    android:singleLine="true"/>
+                    android:hint="Nueva contraseña"/>
             </com.google.android.material.textfield.TextInputLayout>
-            <TextView
-                android:id="@+id/confirmar_contraseña_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:layout_marginTop="20dp"
-                android:text="Escribe de nuevo la nueva contraseña" />
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:passwordToggleEnabled="true"
-                app:passwordToggleDrawable="@drawable/ic_eye">
-                <EditText
-                    android:id="@+id/confirmar_contraseña_edit"
+                app:passwordToggleDrawable="@drawable/ic_eye"
+                app:passwordToggleEnabled="true">
+                <EditText android:id="@+id/reEnterPassword"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
-                    android:singleLine="true"/>
+                    android:hint="Repite la nueva contraseña"/>
             </com.google.android.material.textfield.TextInputLayout>
-            <TextView
-                android:id="@+id/tarjeta_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:layout_marginTop="20dp"
-                android:text="Nº de tarjeta movilidad reducida" />
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp">
+                android:layout_height="wrap_content">
                 <EditText android:id="@+id/n_tarjeta"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
                     android:hint="Nº tarjeta movilida reducida" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <EditText android:id="@+id/date_tarjeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:hint="Fecha caducidad tarjeta"
+                android:inputType="date"
+                android:focusable="false"
+                android:clickable="true"
+                android:maxLines="1"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+
             <Button
                 android:id="@+id/photo_button"
                 android:layout_width="wrap_content"
@@ -136,17 +143,15 @@
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_photo_camera"/>
-
+                android:src="@drawable/ic_photo_camera_black"/>
             <Button
-                android:id="@+id/editar_button"
+                android:id="@+id/edit_user_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
-                android:layout_weight="1"
-                android:text="Guardar cambios"
                 android:backgroundTint="@color/colorPrimary"
-                android:textColor="@color/common_google_signin_btn_text_dark_default"/>
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:text="Guardar cambios"/>
         </LinearLayout>
     </ScrollView>
 
