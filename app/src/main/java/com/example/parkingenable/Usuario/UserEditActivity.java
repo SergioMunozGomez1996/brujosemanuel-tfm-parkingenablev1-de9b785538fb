@@ -327,29 +327,47 @@ public class UserEditActivity extends AppCompatActivity {
             valid = false;
         }
 
+        if (newPassword.getText().toString().length() < 6) {
+            newPassword.setError("Más de 6 caracteres.");
+            valid = false;
+        } else {
+            newPassword.setError(null);
+        }
+
         if(currentPassword.getText().toString().isEmpty() && !newPassword.getText().toString().isEmpty()){
             currentPassword.setError("Introduce la contrasella actual");
             valid = false;
+        }
+        else {
+            currentPassword.setError(null);
         }
 
         if(currentPassword.getText().toString().isEmpty() && !confirmNewPassword.getText().toString().isEmpty()){
             currentPassword.setError("Introduce la contrasella actual");
             valid = false;
+        }else {
+            currentPassword.setError(null);
         }
         if(!currentPassword.getText().toString().isEmpty() && newPassword.getText().toString().isEmpty()){
             currentPassword.setError("Introduce la contrasella nueva");
             valid = false;
+        }else {
+            currentPassword.setError(null);
         }
 
         if(!currentPassword.getText().toString().isEmpty() && confirmNewPassword.getText().toString().isEmpty()){
             currentPassword.setError("Introduce la confirmación de nueva contrasella");
             valid = false;
+        }else {
+            currentPassword.setError(null);
         }
 
         if (!currentPassword.getText().toString().isEmpty() && !md5(currentPassword.getText().toString()).equals(currentSavedPassword)) {
             Toast.makeText(this, "La contraseña actual no coincide con la original", Toast.LENGTH_SHORT).show();
 
             valid = false;
+        }else {
+            currentPassword.setError(null);
         }
 
         return  valid;

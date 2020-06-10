@@ -1,7 +1,9 @@
 package com.example.parkingenable;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,10 +17,12 @@ import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -68,6 +72,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 import com.google.maps.android.clustering.ClusterManager;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
@@ -75,7 +80,9 @@ import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -115,6 +122,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     FloatingActionButton ubicationButton;
     FloatingActionButton newParkingButton;
     FloatingActionButton loginButton;
+    FloatingActionButton parkingRegistration;
 
     //private WeakHashMap mMarkers = new WeakHashMap<Integer, Marker>();
 
@@ -128,9 +136,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static final String USER_ID = "userID";
     public static final String SIN_LOGIN = "sinLogin";
 
+    private boolean estoyLogeado = false;
+
     //cluster
     private ClusterManager<MyItem>clusterManager;
     private List<MyItem>items =  new ArrayList<>();
+
+    private HashMap<Marker, Boolean> estadoPlazas = new HashMap<>();
 
 
     @Override
@@ -150,6 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ubicationButton = findViewById(R.id.fab_ubication);
         newParkingButton = findViewById(R.id.fab_newParking);
         loginButton = findViewById(R.id.fab_login);
+        parkingRegistration = findViewById(R.id.fab_parkingRegister);
         //bottomNavigationView = findViewById(R.id.bottom_navigation_menu);
         //bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
 
@@ -181,6 +194,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        parkingRegistration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mostrarAlertaRegistroAparcamiento();
+            }
+        });
+
     }
 
     @Override
@@ -188,6 +208,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onStart();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         if(!Objects.equals(settings.getString(USER_ID, SIN_LOGIN), SIN_LOGIN)){
+            estoyLogeado = true;
             loginButton.setIcon(R.drawable.ic_person);
             loginButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -197,6 +218,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             });
         }else {
+            estoyLogeado = false;
             loginButton.setIcon(R.drawable.ic_person_add);
             loginButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -331,6 +353,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             markerParking = mMap.addMarker(options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                             markerParking.setTag(plazaID);
                         }
+                        estadoPlazas.put(markerParking, plazaDB.isLibre());
                     }
                 }
             }
@@ -341,7 +364,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+                if(estoyLogeado && estadoPlazas.get(marker)){
+                    parkingRegistration.setVisibility(View.VISIBLE);
+                }else {
+                    parkingRegistration.setVisibility(View.GONE);
+                }
+
                 return false;
+            }
+        });
+
+        mMap.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
+            @Override
+            public void onInfoWindowClose(Marker marker) {
+                parkingRegistration.setVisibility(View.GONE);
             }
         });
 
@@ -693,5 +729,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             mMap.addMarker(options);
         }
+    }
+
+    private void mostrarAlertaRegistroAparcamiento(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+        builder.setTitle("Registrar aparcamiento");
+        builder.setMessage("¿Fijar esta plaza como tu aparcamiento?");
+        builder.setIcon(R.drawable.ic_car_black);
+        builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                //paintMarkers();
+                /*if(userPassword.equals(md5(alertPassword.getText().toString()))){
+                    progressBar.setActivated(true);
+                    // Get a new write batch
+                    WriteBatch batch = FirebaseFirestore.getInstance().batch();
+                    batch.delete(mDocRefUsuarios.document(userId));
+                    //batch.update(mDocRefHistoricoUsuarios.document(userId),usuario.toMap());
+                    batch.set(mDocRefHistoricoUsuarios.document(userId),usuario.toMap());
+                    batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            settings = getSharedPreferences(PREFS_NAME, 0);
+                            SharedPreferences.Editor editor = settings.edit();
+                            editor.clear();
+                            editor.apply();
+
+                            //Volver a la pantalla principal
+                            Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getBaseContext(),"Error en el borrado", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }else
+                    Toast.makeText(getBaseContext(),"Contraseña no válida", Toast.LENGTH_SHORT).show();*/
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
     }
 }
