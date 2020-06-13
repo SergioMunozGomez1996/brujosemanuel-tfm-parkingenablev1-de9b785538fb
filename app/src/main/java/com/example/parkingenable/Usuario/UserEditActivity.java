@@ -92,8 +92,6 @@ public class UserEditActivity extends AppCompatActivity {
     private Button editButton;
     private View editLayout;
 
-    private boolean isPhoto = false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -180,7 +178,6 @@ public class UserEditActivity extends AppCompatActivity {
                 imageBitmap = (Bitmap) extras.get("data");
             }
             this.cardImage.setImageBitmap(imageBitmap);
-            isPhoto = true;
         }
     }
 
@@ -197,9 +194,12 @@ public class UserEditActivity extends AppCompatActivity {
                         if(usuario.isPerfilRevisado()){
                             name.setVisibility(View.GONE);
                             apellidos.setVisibility(View.GONE);
-                            cardDate.setVisibility(View.GONE);
                             cardNumber.setVisibility(View.GONE);
+                            cardDate.setVisibility(View.GONE);
+                            cameraButton.setVisibility(View.GONE);
+                            cardImage.setVisibility(View.GONE);
                         }
+                        perfilRevisado = usuario.isPerfilRevisado();
                         if (usuario.getNombre() != null) {
                             name.setText(usuario.getNombre());
                         }
@@ -210,6 +210,12 @@ public class UserEditActivity extends AppCompatActivity {
                             email.setText(usuario.getCorreo());
                         }
                         if (usuario.getFechaCaducidadTarjeta() != null) {
+                            if(usuario.getFechaCaducidadTarjeta().toDate().before(Timestamp.now().toDate())){
+                                cardDate.setVisibility(View.VISIBLE);
+                                cameraButton.setVisibility(View.VISIBLE);
+                                cardImage.setVisibility(View.VISIBLE);
+                                perfilRevisado = false;
+                            }
                             DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
                             cardDate.setText(formatter.format(usuario.getFechaCaducidadTarjeta().toDate()));
                             fechaExpiracionTarjeta = usuario.getFechaCaducidadTarjeta();
@@ -239,7 +245,6 @@ public class UserEditActivity extends AppCompatActivity {
                                 }
                             });
                         }
-                        perfilRevisado = usuario.isPerfilRevisado();
                     }
 
                 }
@@ -298,11 +303,12 @@ public class UserEditActivity extends AppCompatActivity {
             nuevoUsuario.put("apellidos", apellidos.getText().toString());
         if(!cardNumber.getText().toString().isEmpty())
             nuevoUsuario.put("numeroTarjeta", cardNumber.getText().toString());
-        if(!cardDate.getText().toString().isEmpty())
+        if(fechaExpiracionTarjeta != null)
             nuevoUsuario.put("fechaCaducidadTarjeta", fechaExpiracionTarjeta);
         fechaEdicion = Timestamp.now();
         nuevoUsuario.put("fechaUltimaModificacion", fechaEdicion);
         nuevoUsuario.put("fotoURL", path);
+        nuevoUsuario.put("perfilRevisado", perfilRevisado);
         if(verifyPassword()){
             nuevoUsuario.put("password", md5(newPassword.getText().toString()));
         }
