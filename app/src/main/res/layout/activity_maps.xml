@@ -17,7 +17,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0"
-        tools:context=".MapsActivity" />
+        tools:context=".MapsActivity"
+        tools:layout="@layout/activity_maps" />
 
     <com.getbase.floatingactionbutton.FloatingActionsMenu
         android:id="@+id/grupo_map_fab"
@@ -155,6 +156,17 @@
             android:textColor="@color/whiteGoogle"
             android:textSize="25sp" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

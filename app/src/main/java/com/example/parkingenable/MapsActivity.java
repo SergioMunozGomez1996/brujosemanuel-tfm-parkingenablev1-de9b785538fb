@@ -22,9 +22,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -82,7 +82,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -123,15 +122,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     FloatingActionButton newParkingButton;
     FloatingActionButton loginButton;
     FloatingActionButton parkingRegistration;
+    private ProgressBar progressBar;
 
     //private WeakHashMap mMarkers = new WeakHashMap<Integer, Marker>();
 
     //Database
     private CollectionReference mDocRefPlazas = FirebaseFirestore.getInstance().collection("plazas");
     private CollectionReference mDocRefNewParking = FirebaseFirestore.getInstance().collection("ParkingSuggestions");
+    private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
     public static final String CITY_KEY="ciudad";
 
     //User's preferences
+    private SharedPreferences settings;
+    private String userId;
     public static final String PREFS_NAME = "MyPrefsFile";
     public static final String USER_ID = "userID";
     public static final String SIN_LOGIN = "sinLogin";
@@ -142,7 +145,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ClusterManager<MyItem>clusterManager;
     private List<MyItem>items =  new ArrayList<>();
 
-    private HashMap<Marker, Boolean> estadoPlazas = new HashMap<>();
+    private List<Marker> marcadoresPlazasOcupadasDesconocidas = new ArrayList<>();
+    private Marker plazaRegistrarOcupacion;
+    private String plazaOcupadaUsuarioID;
 
 
     @Override
@@ -152,6 +157,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Request Permission -- habría que espera a cargar el mapa hasta que sepamos si tenemos los permisos o no
         //showPhoneLocationPermission();
         setContentView(R.layout.activity_maps);
+        settings = getSharedPreferences(PREFS_NAME, 0);
 
         //SearchBar
         materialSearchBar = findViewById(R.id.searchBar);
@@ -165,6 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         parkingRegistration = findViewById(R.id.fab_parkingRegister);
         //bottomNavigationView = findViewById(R.id.bottom_navigation_menu);
         //bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
+        progressBar = findViewById(R.id.progressBar);
 
         //popup
         epicDialog = new Dialog(this);
@@ -206,9 +213,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onStart() {
         super.onStart();
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         if(!Objects.equals(settings.getString(USER_ID, SIN_LOGIN), SIN_LOGIN)){
             estoyLogeado = true;
+            userId = settings.getString(USER_ID, SIN_LOGIN);
             loginButton.setIcon(R.drawable.ic_person);
             loginButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -353,7 +360,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             markerParking = mMap.addMarker(options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                             markerParking.setTag(plazaID);
                         }
-                        estadoPlazas.put(markerParking, plazaDB.isLibre());
+                        //solo guarda las plazas ocupadas pero sin estar registradas por ningún usuario
+                        if(plazaDB.getUsuarioOcupando() == null && !plazaDB.isLibre())
+                            marcadoresPlazasOcupadasDesconocidas.add(markerParking);
+
+                        //guarda la plaza si está ocupada por el usuario y si el usuario está logeado
+                        if(userId != null && plazaDB.getUsuarioOcupando() != null && plazaDB.getUsuarioOcupando().equals(userId))
+                            plazaOcupadaUsuarioID = plazaID.toString();
                     }
                 }
             }
@@ -364,10 +377,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                if(estoyLogeado && estadoPlazas.get(marker)){
+                //comprueba si el usuario está logeado y si la plaza seleccionada tiene una ocupación sin registrar
+                if(estoyLogeado && marcadoresPlazasOcupadasDesconocidas.contains(marker)){
                     parkingRegistration.setVisibility(View.VISIBLE);
+                    plazaRegistrarOcupacion = marker;
+
                 }else {
                     parkingRegistration.setVisibility(View.GONE);
+                    plazaRegistrarOcupacion = null;
                 }
 
                 return false;
@@ -378,6 +395,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onInfoWindowClose(Marker marker) {
                 parkingRegistration.setVisibility(View.GONE);
+                plazaRegistrarOcupacion = null;
             }
         });
 
@@ -732,52 +750,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void mostrarAlertaRegistroAparcamiento(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        // Get the layout inflater
-        LayoutInflater inflater = getLayoutInflater();
-        builder.setTitle("Registrar aparcamiento");
-        builder.setMessage("¿Fijar esta plaza como tu aparcamiento?");
-        builder.setIcon(R.drawable.ic_car_black);
-        builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                //paintMarkers();
-                /*if(userPassword.equals(md5(alertPassword.getText().toString()))){
-                    progressBar.setActivated(true);
+        if(plazaRegistrarOcupacion != null){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            // Get the layout inflater
+            LayoutInflater inflater = getLayoutInflater();
+            builder.setTitle("Registrar aparcamiento");
+            builder.setMessage("¿Fijar esta plaza como tu aparcamiento?");
+            builder.setIcon(R.drawable.ic_car_black);
+            builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    //paintMarkers();
+                    progressBar.setVisibility(View.VISIBLE);
+                    HashMap<String, Object> usuario = new HashMap<>();
+                    usuario.put("plazaOcupada", Objects.requireNonNull(plazaRegistrarOcupacion.getTag()).toString());
+
+                    HashMap<String, Object> plaza = new HashMap<>();
+                    plaza.put("usuarioOcupando", userId);
+
+                    HashMap<String, Object> plazaOcupadaAntigua = new HashMap<>();
+                    plazaOcupadaAntigua.put("usuarioOcupando", null);
                     // Get a new write batch
                     WriteBatch batch = FirebaseFirestore.getInstance().batch();
-                    batch.delete(mDocRefUsuarios.document(userId));
-                    //batch.update(mDocRefHistoricoUsuarios.document(userId),usuario.toMap());
-                    batch.set(mDocRefHistoricoUsuarios.document(userId),usuario.toMap());
+                    batch.update(mDocRefUsuarios.document(userId),usuario);
+                    batch.update(mDocRefPlazas.document(plazaOcupadaUsuarioID), plazaOcupadaAntigua);
+                    batch.update(mDocRefPlazas.document(plazaRegistrarOcupacion.getTag().toString()), plaza);
                     batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            settings = getSharedPreferences(PREFS_NAME, 0);
-                            SharedPreferences.Editor editor = settings.edit();
-                            editor.clear();
-                            editor.apply();
-
-                            //Volver a la pantalla principal
-                            Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(intent);
+                            progressBar.setVisibility(View.GONE);
+                            Toast.makeText(getBaseContext(),"Aparcamiento registrado", Toast.LENGTH_SHORT).show();
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(getBaseContext(),"Error en el borrado", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getBaseContext(),"Error al registrar aparcamiento", Toast.LENGTH_SHORT).show();
                         }
                     });
-                }else
-                    Toast.makeText(getBaseContext(),"Contraseña no válida", Toast.LENGTH_SHORT).show();*/
-            }
-        });
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-            }
-        });
-        builder.show();
+                }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            });
+            builder.show();
+        }else
+            Toast.makeText(this, "Error al registrar aparcamiento", Toast.LENGTH_SHORT).show();
+
     }
 }

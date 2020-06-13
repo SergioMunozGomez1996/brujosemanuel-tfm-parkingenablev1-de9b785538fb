@@ -14,6 +14,7 @@ public class PlazaParkingDB {
     private boolean libre;
     private int like;
     private int dislike;
+    private String usuarioOcupando;
 
     public PlazaParkingDB(){}
 
@@ -80,6 +81,15 @@ public class PlazaParkingDB {
     public void setLibre(boolean libre) {
         this.libre = libre;
     }
+
+    public String getUsuarioOcupando() {
+        return usuarioOcupando;
+    }
+
+    public void setUsuarioOcupando(String usuarioOcupando) {
+        this.usuarioOcupando = usuarioOcupando;
+    }
+
     /*
     public LatLng getCoordenadas() {
         return coordenadas;
