@@ -78,9 +78,22 @@
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_colorNormal="?attr/colorPrimary"
-        app:fab_icon="@drawable/parking_register"
+        app:fab_icon="@drawable/parking_register_white"
         app:fab_title="ManualParking"
         app:layout_constraintBottom_toTopOf="@+id/fab_ubication"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone"/>
+    <com.getbase.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_findCar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:fabSize="mini"
+        app:fab_addButtonColorPressed="@color/colorPrimaryDark"
+        app:fab_colorNormal="?attr/colorPrimary"
+        app:fab_icon="@drawable/ic_car"
+        app:fab_title="FindCar"
+        app:layout_constraintBottom_toTopOf="@+id/fab_parkingRegister"
         app:layout_constraintStart_toStartOf="parent"
         android:visibility="gone"/>
 

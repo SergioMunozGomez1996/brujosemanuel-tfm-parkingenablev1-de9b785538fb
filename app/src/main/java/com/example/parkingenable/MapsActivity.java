@@ -122,6 +122,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     FloatingActionButton newParkingButton;
     FloatingActionButton loginButton;
     FloatingActionButton parkingRegistration;
+    FloatingActionButton findCar;
     private ProgressBar progressBar;
 
     //private WeakHashMap mMarkers = new WeakHashMap<Integer, Marker>();
@@ -148,6 +149,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Marker> marcadoresPlazasOcupadasDesconocidas = new ArrayList<>();
     private Marker plazaRegistrarOcupacion;
     private String plazaOcupadaUsuarioID;
+    private PlazaParkingDB plazaOcupadaUsuario;
 
 
     @Override
@@ -169,6 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         newParkingButton = findViewById(R.id.fab_newParking);
         loginButton = findViewById(R.id.fab_login);
         parkingRegistration = findViewById(R.id.fab_parkingRegister);
+        findCar = findViewById(R.id.fab_findCar);
         //bottomNavigationView = findViewById(R.id.bottom_navigation_menu);
         //bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
         progressBar = findViewById(R.id.progressBar);
@@ -205,6 +208,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 mostrarAlertaRegistroAparcamiento();
+            }
+        });
+        findCar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(plazaOcupadaUsuario != null)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(plazaOcupadaUsuario.getLatitude(), plazaOcupadaUsuario.getLongitude()), DEFAULT_ZOOM));
             }
         });
 
@@ -331,8 +341,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if(e!=null){
                     Log.w(TAG, "Listen failed, " , e);
                 }
-
+                //Limpiamos referencias de antiguos marcadores y plaza ocupada por el usuario
                 mMap.clear();
+                plazaOcupadaUsuario = null;
                 for(QueryDocumentSnapshot plaza: value){
                     if(plaza.get("calle")!=null){
                         Integer plazaID = Integer.parseInt(plaza.getId());
@@ -367,10 +378,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         //guarda la plaza si está ocupada por el usuario y si el usuario está logeado
                         if(plazaDB.getUsuarioOcupando() != null && plazaDB.getUsuarioOcupando().equals(userId)){
                             plazaOcupadaUsuarioID = plazaID.toString();
+                            plazaOcupadaUsuario = plazaDB;
                             markerParking.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                            findCar.setVisibility(View.VISIBLE);
                         }
                     }
                 }
+                //Si depues de recorrer todas las plazas ninguna está guardada como ocupada por el usuario deshabilita el boton de encontrar mi coche
+                if(plazaOcupadaUsuario == null)
+                    findCar.setVisibility(View.GONE);
             }
         });
 
@@ -777,7 +793,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // Get a new write batch
                     WriteBatch batch = FirebaseFirestore.getInstance().batch();
                     batch.update(mDocRefUsuarios.document(userId),usuario);
-                    batch.update(mDocRefPlazas.document(plazaOcupadaUsuarioID), plazaOcupadaAntigua);
+                    if(plazaOcupadaUsuarioID != null)
+                        batch.update(mDocRefPlazas.document(plazaOcupadaUsuarioID), plazaOcupadaAntigua);
                     batch.update(mDocRefPlazas.document(plazaRegistrarOcupacion.getTag().toString()), plaza);
                     batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
