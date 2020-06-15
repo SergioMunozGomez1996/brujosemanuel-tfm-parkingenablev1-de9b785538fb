@@ -354,7 +354,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         //clusterManager.addItems(items);
                         //clusterManager.cluster();
                         if(plazaDB.isLibre()){
-                            markerParking = mMap.addMarker(options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                            markerParking = mMap.addMarker(options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
                             markerParking.setTag(plazaID);
                         }else{
                             markerParking = mMap.addMarker(options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
@@ -365,8 +365,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             marcadoresPlazasOcupadasDesconocidas.add(markerParking);
 
                         //guarda la plaza si está ocupada por el usuario y si el usuario está logeado
-                        if(userId != null && plazaDB.getUsuarioOcupando() != null && plazaDB.getUsuarioOcupando().equals(userId))
+                        if(plazaDB.getUsuarioOcupando() != null && plazaDB.getUsuarioOcupando().equals(userId)){
                             plazaOcupadaUsuarioID = plazaID.toString();
+                            markerParking.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                        }
                     }
                 }
             }
@@ -405,6 +407,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String id = marker.getTag().toString();
                 Intent intent  = new Intent(MapsActivity.this, ParkingActivity.class);
                 intent.putExtra("IDMarker", id);
+                if(plazaOcupadaUsuarioID != null)
+                intent.putExtra("plazaOcupadaUsuarioID", plazaOcupadaUsuarioID);
                 startActivity(intent);
                 Toast.makeText(MapsActivity.this, "has pulsado un marcador con ID: " + id, Toast.LENGTH_SHORT).show();
             }
@@ -756,7 +760,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LayoutInflater inflater = getLayoutInflater();
             builder.setTitle("Registrar aparcamiento");
             builder.setMessage("¿Fijar esta plaza como tu aparcamiento?");
-            builder.setIcon(R.drawable.ic_car_black);
+            builder.setIcon(R.drawable.parking_register);
             builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {

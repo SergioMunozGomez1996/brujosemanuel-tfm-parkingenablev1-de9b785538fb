@@ -1,13 +1,17 @@
 package com.example.parkingenable;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -28,20 +32,24 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ParkingActivity extends AppCompatActivity {
 
     private static final String TAG = "ParkingActivity";
 
     TextView streetName, textLike, textDislike;
-    LinearLayout cardLike, cardDislike, cardNavigation;
+    LinearLayout cardLike, cardDislike, cardNavigation, cardParking;
     String idPlazaParking;
     Boolean voted=false;
     Button buttonErrorParking;
     PlazaParkingDB plazaDB;
+    //plaza que está ocupando el usuario registrado en este momento
+    private String plazaOcupadaUsuarioID;
 
     //popup parking not exist
     Dialog epicDialog;
@@ -49,8 +57,16 @@ public class ParkingActivity extends AppCompatActivity {
     ImageView buttonClosePopupImage;
 
     //Database
-    private CollectionReference mDocRef = FirebaseFirestore.getInstance().collection("plazas");
+    private CollectionReference mDocRefPlazas = FirebaseFirestore.getInstance().collection("plazas");
     private CollectionReference mDocRefErrorParking = FirebaseFirestore.getInstance().collection("parkingNotExist");
+    private CollectionReference mDocRefUsuarios = FirebaseFirestore.getInstance().collection("usuarios");
+
+    //User's preferences
+    private SharedPreferences settings;
+    private String userId;
+    public static final String PREFS_NAME = "MyPrefsFile";
+    public static final String USER_ID = "userID";
+    public static final String SIN_LOGIN = "sinLogin";
 
 
     @Override
@@ -61,6 +77,11 @@ public class ParkingActivity extends AppCompatActivity {
         //Recover the extra
         Intent intent = getIntent();
         idPlazaParking = intent.getStringExtra("IDMarker");
+        plazaOcupadaUsuarioID = intent.getStringExtra("plazaOcupadaUsuarioID");
+
+        //User's preferences
+        settings = getSharedPreferences(PREFS_NAME, 0);
+        userId = settings.getString(USER_ID, SIN_LOGIN);
 
         //Initialization
 
@@ -71,6 +92,7 @@ public class ParkingActivity extends AppCompatActivity {
         cardLike = findViewById(R.id.card_like);
         cardDislike = findViewById(R.id.card_dislike);
         cardNavigation = findViewById(R.id.card_navigation);
+        cardParking = findViewById(R.id.card_parking);
 
         //Textview
         textLike = findViewById(R.id.textview_like);
@@ -91,7 +113,7 @@ public class ParkingActivity extends AppCompatActivity {
                         cardDislike.setClickable(false);
                         cardLike.setBackground(getDrawable(R.drawable.bg_item_selected));
 
-                        DocumentReference docRef = mDocRef.document(idPlazaParking);
+                        DocumentReference docRef = mDocRefPlazas.document(idPlazaParking);
                         // Atomically increment the population of the city by 1.
                         docRef.update("like", FieldValue.increment(1));
                         updateScreen();
@@ -100,7 +122,7 @@ public class ParkingActivity extends AppCompatActivity {
                         cardDislike.setClickable(true);
                         cardLike.setBackground(getDrawable(R.drawable.bg_item));
 
-                        DocumentReference docRef = mDocRef.document(idPlazaParking);
+                        DocumentReference docRef = mDocRefPlazas.document(idPlazaParking);
                         docRef.update("like", FieldValue.increment(-1));
                         updateScreen();
                     }
@@ -120,7 +142,7 @@ public class ParkingActivity extends AppCompatActivity {
                         cardLike.setClickable(false);
                         cardDislike.setBackground(getDrawable(R.drawable.bg_item_selected));
 
-                        DocumentReference docRef = mDocRef.document(idPlazaParking);
+                        DocumentReference docRef = mDocRefPlazas.document(idPlazaParking);
                         // Atomically increment the population of the city by 1.
                         docRef.update("dislike", FieldValue.increment(1));
                         updateScreen();
@@ -129,7 +151,7 @@ public class ParkingActivity extends AppCompatActivity {
                         cardLike.setClickable(true);
                         cardDislike.setBackground(getDrawable(R.drawable.bg_item));
 
-                        DocumentReference docRef = mDocRef.document(idPlazaParking);
+                        DocumentReference docRef = mDocRefPlazas.document(idPlazaParking);
                         docRef.update("dislike", FieldValue.increment(-1));
                         updateScreen();
                     }
@@ -150,6 +172,14 @@ public class ParkingActivity extends AppCompatActivity {
                     mapIntent.setPackage("com.google.android.apps.maps");
                     startActivity(mapIntent);
                 }
+            }
+        });
+
+        //Registrar aparcamiento
+        cardParking.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mostrarAlertaRegistroAparcamiento();
             }
         });
 
@@ -176,7 +206,7 @@ public class ParkingActivity extends AppCompatActivity {
 
     private void updateScreen() {
         if(idPlazaParking != null){
-            DocumentReference docRef = mDocRef.document(idPlazaParking);
+            DocumentReference docRef = mDocRefPlazas.document(idPlazaParking);
             docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -188,6 +218,11 @@ public class ParkingActivity extends AppCompatActivity {
                         streetName.setText(plazaDB.getCalle());
                         textLike.setText("Me gusta: "+ plazaDB.getLike());
                         textDislike.setText("No me gusta: "+ plazaDB.getDislike());
+                        //solo se muestra el boton de registro si la plaza está ocupada pero sin estar registrada por ningún usuario
+                        if(!userId.equals(SIN_LOGIN) && plazaDB.getUsuarioOcupando() == null && !plazaDB.isLibre())
+                            cardParking.setVisibility(View.VISIBLE);
+                        else
+                            cardParking.setVisibility(View.GONE);
                     }else {
                         Log.d(TAG, "get failed with ", task.getException());
                     }
@@ -257,6 +292,57 @@ public class ParkingActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void mostrarAlertaRegistroAparcamiento(){
+        if(plazaDB != null){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            // Get the layout inflater
+            LayoutInflater inflater = getLayoutInflater();
+            builder.setTitle("Registrar aparcamiento");
+            builder.setMessage("¿Fijar esta plaza como tu aparcamiento?");
+            builder.setIcon(R.drawable.parking_register);
+            builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    HashMap<String, Object> usuario = new HashMap<>();
+                    usuario.put("plazaOcupada", Objects.requireNonNull(idPlazaParking));
+
+                    HashMap<String, Object> plaza = new HashMap<>();
+                    plaza.put("usuarioOcupando", userId);
+
+                    HashMap<String, Object> plazaOcupadaAntigua = new HashMap<>();
+                    plazaOcupadaAntigua.put("usuarioOcupando", null);
+                    // Get a new write batch
+                    WriteBatch batch = FirebaseFirestore.getInstance().batch();
+                    batch.update(mDocRefUsuarios.document(userId),usuario);
+                    if(plazaOcupadaUsuarioID != null)
+                        batch.update(mDocRefPlazas.document(plazaOcupadaUsuarioID), plazaOcupadaAntigua);
+                    batch.update(mDocRefPlazas.document(idPlazaParking), plaza);
+                    batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Toast.makeText(getBaseContext(),"Aparcamiento registrado", Toast.LENGTH_SHORT).show();
+                            updateScreen();
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getBaseContext(),"Error al registrar aparcamiento", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            });
+            builder.show();
+        }else
+            Toast.makeText(this, "Error al registrar aparcamiento", Toast.LENGTH_SHORT).show();
+
     }
 
 }

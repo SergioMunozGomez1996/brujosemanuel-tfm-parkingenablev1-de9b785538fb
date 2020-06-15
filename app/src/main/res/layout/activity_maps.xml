@@ -78,7 +78,7 @@
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_colorNormal="?attr/colorPrimary"
-        app:fab_icon="@drawable/ic_car"
+        app:fab_icon="@drawable/parking_register"
         app:fab_title="ManualParking"
         app:layout_constraintBottom_toTopOf="@+id/fab_ubication"
         app:layout_constraintStart_toStartOf="parent"
