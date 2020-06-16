@@ -24,14 +24,14 @@
         android:id="@+id/grupo_map_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="240dp"
+        android:layout_marginEnd="10dp"
         app:fab_addButtonColorNormal="@color/colorPrimary"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_labelStyle="@style/etiqueta"
         app:layout_anchor="@+id/map"
         app:layout_anchorGravity="right|center"
-        app:layout_constraintEnd_toEndOf="@+id/map"
-        app:layout_constraintTop_toTopOf="@+id/searchBar">
+        app:layout_constraintBottom_toTopOf="@+id/fab_login"
+        app:layout_constraintEnd_toEndOf="@+id/map">
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab1"
@@ -59,8 +59,7 @@
         android:id="@+id/fab_ubication"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
+        android:layout_marginStart="10dp"
         android:layout_marginBottom="16dp"
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
@@ -74,7 +73,7 @@
         android:id="@+id/fab_parkingRegister"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_colorNormal="?attr/colorPrimary"
@@ -87,11 +86,11 @@
         android:id="@+id/fab_findCar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_colorNormal="?attr/colorPrimary"
-        app:fab_icon="@drawable/ic_car"
+        app:fab_icon="@drawable/find_car"
         app:fab_title="FindCar"
         app:layout_constraintBottom_toTopOf="@+id/fab_parkingRegister"
         app:layout_constraintStart_toStartOf="parent"
@@ -115,13 +114,15 @@
         android:id="@+id/fab_login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="56dp"
         app:fabSize="mini"
         app:fab_addButtonColorPressed="@color/colorPrimaryDark"
         app:fab_colorNormal="?attr/colorPrimary"
         app:fab_icon="@drawable/ic_person_add"
         app:fab_title="Login"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/grupo_map_fab" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.mancj.materialsearchbar.MaterialSearchBar
         android:id="@+id/searchBar"
