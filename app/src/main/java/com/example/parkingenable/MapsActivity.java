@@ -3,8 +3,10 @@ package com.example.parkingenable;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -36,6 +38,11 @@ import com.example.parkingenable.Usuario.LoginActivity;
 import com.example.parkingenable.Usuario.UserProfileActivity;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionRequest;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -76,6 +83,8 @@ import com.google.firebase.firestore.WriteBatch;
 import com.google.maps.android.clustering.ClusterManager;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
+
+import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -139,6 +148,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static final String PREFS_NAME = "MyPrefsFile";
     public static final String USER_ID = "userID";
     public static final String SIN_LOGIN = "sinLogin";
+    public static final String AUTO_PARKING = "autoParking";
 
     private boolean estoyLogeado = false;
 
@@ -151,6 +161,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String plazaOcupadaUsuarioID;
     private PlazaParkingDB plazaOcupadaUsuario;
 
+
+    /**
+     * The entry point for interacting with activity recognition.
+     */
+    private ActivityRecognitionClient mActivityRecognitionClient;
+    //check for devices with Android 10 (29+).
+    private boolean runningQOrLater =
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q;
+    /* Id to identify Activity Recognition permission request. */
+    private static final int PERMISSION_REQUEST_ACTIVITY_RECOGNITION = 45;
+    // Intents action that will be fired when transitions are triggered
+    private final String TRANSITION_ACTION_RECEIVER =
+            BuildConfig.APPLICATION_ID + "TRANSITION_ACTION_RECEIVER";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,6 +204,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Check the GPS permission
         getLocationPermission();
+
+        //Activity recognition client
+        mActivityRecognitionClient = new ActivityRecognitionClient(this);
 
         //clickListeners
 
@@ -234,6 +260,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     startActivity(intent);
                 }
             });
+            checkAutoParking();
+
         }else {
             estoyLogeado = false;
             loginButton.setIcon(R.drawable.ic_person_add);
@@ -821,4 +849,249 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Toast.makeText(this, "Error al registrar aparcamiento", Toast.LENGTH_SHORT).show();
 
     }
+
+    /**
+     * Retrieves the boolean from SharedPreferences that tracks whether we are requesting activity
+     * updates.
+     */
+    private boolean getUpdatesRequestedState() {
+        return settings.getBoolean(AUTO_PARKING, false);
+    }
+
+    private void verifyBluetooth() {
+
+        try {
+            if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Bluetooth not enabled");
+                builder.setMessage("Please enable bluetooth in settings and restart this application.");
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        //finish();
+                        //System.exit(0);
+                    }
+                });
+                builder.show();
+            }
+        } catch (RuntimeException e) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE not available");
+            builder.setMessage("Sorry, this device does not support Bluetooth LE.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    //finish();
+                    //System.exit(0);
+                }
+
+            });
+            builder.show();
+
+        }
+
+    }
+
+    /**
+     * Registers for activity recognition updates using
+     * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
+     * Registers success and failure callbacks.
+     */
+    public void requestActivityUpdates() {
+
+        //si ya hay una peticion para la actualización de actividad no se lanza otra
+        if(!settings.getBoolean("ActivityRecognition", false)){
+            // myPendingIntent is the instance of PendingIntent where the app receives callbacks.
+            Task<Void> task = ActivityRecognition.getClient(this)
+                    .requestActivityTransitionUpdates(getActivityTransitionRequest(), getActivityDetectionPendingIntent());
+
+            task.addOnSuccessListener(
+                    new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                            // Handle success
+                            Toast.makeText(getBaseContext(),
+                                    "Recogiendo actividad",
+                                    Toast.LENGTH_SHORT)
+                                    .show();
+                            settings.edit().putBoolean("ActivityRecognition", true).apply();
+                        }
+                    }
+            );
+
+            task.addOnFailureListener(
+                    new OnFailureListener() {
+                        @Override
+                        public void onFailure(Exception e) {
+                            // Handle error
+                            Toast.makeText(getBaseContext(),
+                                    "Error al recoger actividad",
+                                    Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    }
+            );
+        }
+    }
+
+    /**
+     * Removes activity recognition updates using
+     * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
+     * failure callbacks.
+     */
+    public void removeActivityUpdates() {
+        Task<Void> task = mActivityRecognitionClient
+                .removeActivityTransitionUpdates(getActivityDetectionPendingIntent());
+
+        task.addOnSuccessListener(
+                new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        // Handle success
+                        Toast.makeText(getBaseContext(),
+                                "Deshabilitando actividad",
+                                Toast.LENGTH_SHORT)
+                                .show();
+                        settings.edit().putBoolean("ActivityRecognition", false).apply();
+                    }
+                }
+        );
+
+        task.addOnFailureListener(
+                new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        // Handle error
+                        Toast.makeText(getBaseContext(),
+                                "Error al recoger actividad",
+                                Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                }
+        );
+    }
+
+    /**
+     * Gets a PendingIntent to be sent for each activity detection.
+     */
+    private PendingIntent getActivityDetectionPendingIntent() {
+        /*Intent intent = new Intent(TRANSITION_ACTION_RECEIVER);
+
+
+        TransitionsReceiver mTransitionsReceiver = new TransitionsReceiver();
+        if(request)
+            getApplication().registerReceiver(mTransitionsReceiver, new IntentFilter(TRANSITION_ACTION_RECEIVER));
+        else
+            getApplication().unregisterReceiver(mTransitionsReceiver);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // requestActivityUpdates() and removeActivityUpdates().
+        return PendingIntent.getBroadcast(this,0, intent, PendingIntent.FLAG_UPDATE_CURRENT);*/
+        Intent intent = new Intent(getApplicationContext(), TransitionsReceiver.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // addGeofences() and removeGeofences().
+        return PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    /**
+     * On devices Android 10 and beyond (29+), you need to ask for the ACTIVITY_RECOGNITION via the
+     * run-time permissions.
+     */
+    private boolean activityRecognitionPermissionApproved() {
+
+        //Review permission check for 29+.
+        if (runningQOrLater) {
+
+            return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACTIVITY_RECOGNITION
+            );
+        } else {
+            return true;
+        }
+    }
+
+    public void checkEnableOrDisableActivityRecognition() {
+
+        //Enable/Disable activity tracking and ask for permissions if needed.
+        if (activityRecognitionPermissionApproved()) {
+            verifyBluetooth();
+            requestActivityUpdates();
+
+            //Add requests for activity tracking.
+            /*if (activityTrackingEnabled) {
+                disableActivityTransitions();
+
+            } else {
+                enableActivityTransitions();
+            }*/
+
+        } else {
+            /*Intent startIntent = new Intent(this, PermissionRationalActivity.class);
+            startActivity(startIntent);*/
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                    PERMISSION_REQUEST_ACTIVITY_RECOGNITION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_ACTIVITY_RECOGNITION) {
+            verifyBluetooth();
+            requestActivityUpdates();
+        }
+    }
+
+    private void checkAutoParking(){
+        if(getUpdatesRequestedState()){
+            checkEnableOrDisableActivityRecognition();
+        }else
+            removeActivityUpdates();
+    }
+
+    private ActivityTransitionRequest getActivityTransitionRequest(){
+        List<ActivityTransition> transitions = new ArrayList<>();
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.IN_VEHICLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build());
+
+        transitions.add(new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build());
+        transitions.add(new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build());
+
+        transitions.add(new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_FOOT)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build());
+        transitions.add(new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_FOOT)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build());
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.WALKING)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build());
+
+        transitions.add(
+                new ActivityTransition.Builder()
+                        .setActivityType(DetectedActivity.WALKING)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                        .build());
+
+        return new ActivityTransitionRequest(transitions);
+    }
+
 }
