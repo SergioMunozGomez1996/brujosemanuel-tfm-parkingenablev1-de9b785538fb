@@ -1020,14 +1020,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             verifyBluetooth();
             requestActivityUpdates();
 
-            //Add requests for activity tracking.
-            /*if (activityTrackingEnabled) {
-                disableActivityTransitions();
-
-            } else {
-                enableActivityTransitions();
-            }*/
-
         } else {
             /*Intent startIntent = new Intent(this, PermissionRationalActivity.class);
             startActivity(startIntent);*/

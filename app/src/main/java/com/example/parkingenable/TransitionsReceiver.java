@@ -81,10 +81,17 @@ public class TransitionsReceiver extends BroadcastReceiver {
     private void startTransmittingBeacons(Context context){
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
         String userID = settings.getString(USER_ID, SIN_LOGIN);
+        String uuidString = userID.substring(0,16);
+        String majorString = userID.substring(16,18);
+        String minorString = userID.substring(18,20);
+
+        String uuidHex = convertStringToHex(uuidString);
+        String majorDecimal = String.valueOf(Integer.parseInt(convertStringToHex(majorString),16));
+        String minorDecimal = String.valueOf(Integer.parseInt(convertStringToHex(minorString),16));
         Beacon beacon = new Beacon.Builder()
-                .setId1("2f234454-cf6d-4a0f-adf2-f4911ba9ffa6")
-                .setId2("1")
-                .setId3("2")
+                .setId1(uuidHex.substring(0,8)+"-"+uuidHex.substring(8,12)+"-"+uuidHex.substring(12,16)+"-"+uuidHex.substring(16,20)+"-"+uuidHex.substring(20,32))
+                .setId2(majorDecimal)
+                .setId3(minorDecimal)
                 .setManufacturer(0x004C) // Radius Networks.  Change this for other beacon layouts
                 .setTxPower(-59)
                 .setDataFields(Arrays.asList(new Long[]{0l})) // Remove this for beacon layouts without d: fields
@@ -133,5 +140,23 @@ public class TransitionsReceiver extends BroadcastReceiver {
         // class will automatically cause the BeaconLibrary to save battery whenever the application
         // is not visible.  This reduces bluetooth power usage by about 60%
         //backgroundPowerSaver = new BackgroundPowerSaver(this);
+    }
+
+    // Char -> Decimal -> Hex
+    public static String convertStringToHex(String str) {
+
+        StringBuffer hex = new StringBuffer();
+
+        // loop chars one by one
+        for (char temp : str.toCharArray()) {
+
+            // convert char to int, for char `a` decimal 97
+
+            // convert int to hex, for decimal 97 hex 61
+            hex.append(Integer.toHexString(temp));
+        }
+
+        return hex.toString();
+
     }
 }
