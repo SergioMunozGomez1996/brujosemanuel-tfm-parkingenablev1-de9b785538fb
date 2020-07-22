@@ -42,6 +42,8 @@ dependencies {
     implementation 'com.android.support:design:29.0.0'
     //Storage
     implementation 'com.google.firebase:firebase-storage:19.1.1'
+    // Add the SDK for Firebase Cloud Messaging
+    implementation 'com.google.firebase:firebase-messaging:20.2.3'
     // FirebaseUI Storage only
     implementation 'com.firebaseui:firebase-ui-storage:4.3.1'
     //Beacon library

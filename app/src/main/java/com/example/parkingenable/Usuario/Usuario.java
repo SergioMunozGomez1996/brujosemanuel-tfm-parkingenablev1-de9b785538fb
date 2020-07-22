@@ -22,6 +22,7 @@ public class Usuario {
     private Timestamp fechaRevision;
     private String codigoCambioPassword;
     private Timestamp fechaCaducidadCodigoCambioPassword;
+    private String plazaOcupada;
 
 
     /*public Usuario(String correo, String password, String nombre) {
@@ -184,6 +185,14 @@ public class Usuario {
         this.fechaCaducidadCodigoCambioPassword = fechaCaducidadCodigoCambioPassword;
     }
 
+    public String getPlazaOcupada() {
+        return plazaOcupada;
+    }
+
+    public void setPlazaOcupada(String plazaOcupada) {
+        this.plazaOcupada = plazaOcupada;
+    }
+
     //Con este mapeo podemos filtrar qué datos de la clase devolver
     // [START post_to_map]
     public Map<String, Object> toMap() {
@@ -203,6 +212,7 @@ public class Usuario {
         result.put("fechaRevision", fechaRevision);
         result.put("codigoCambioPassword", codigoCambioPassword);
         result.put("fechaCaducidadCodigoCambioPassword", fechaCaducidadCodigoCambioPassword);
+        result.put("plazaOcupada", plazaOcupada);
 
         return result;
     }

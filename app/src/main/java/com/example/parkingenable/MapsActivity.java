@@ -14,6 +14,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -1023,10 +1024,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             /*Intent startIntent = new Intent(this, PermissionRationalActivity.class);
             startActivity(startIntent);*/
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                    PERMISSION_REQUEST_ACTIVITY_RECOGNITION);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                        PERMISSION_REQUEST_ACTIVITY_RECOGNITION);
+            }
         }
     }
 

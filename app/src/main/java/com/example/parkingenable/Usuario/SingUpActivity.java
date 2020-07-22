@@ -11,6 +11,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -36,6 +37,8 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -338,10 +341,7 @@ public class SingUpActivity extends AppCompatActivity {
         batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                //Volver a la pantalla principal
-                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+                sendRegistrationTokenToServer();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -392,5 +392,45 @@ public class SingUpActivity extends AppCompatActivity {
     //Es para que los días o meses se muestren a 2 dígitos.
     private String twoDigits(int n) {
         return (n <= 9) ? ("0" + n) : String.valueOf(n);
+    }
+
+    //recuperamos el token para recibir notificaciones de FCM al movil
+    private void sendRegistrationTokenToServer(){
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(SingUpActivity.this, "Error al obtener el token de la app",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        saveAppToken(task.getResult().getToken());
+                    }
+                });
+    }
+
+    private void saveAppToken(String token){
+        WriteBatch batch = FirebaseFirestore.getInstance().batch();
+        HashMap<String, Object> usuario = new HashMap<>();
+        usuario.put("tokenFCM", token);
+        batch.update(mDocRefUsuarios.document(userID), usuario);
+        batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                //Volver a la pantalla principal
+                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getBaseContext(),"Error al guardar el tokenFCM", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(SingUpActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        });
     }
 }
