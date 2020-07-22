@@ -19,14 +19,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.parkingenable.MapsActivity;
 import com.example.parkingenable.R;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -103,10 +109,8 @@ public class LoginActivity extends AppCompatActivity {
                                 // Commit the edits!
                                 editor.apply();
 
-                                //Volver a la pantalla principal
-                                Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                startActivity(intent);
+                                sendRegistrationTokenToServer(usuario.getId());
+
                             }
                         } else {
                             progressBar.setVisibility(View.INVISIBLE);
@@ -159,5 +163,45 @@ public class LoginActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return "";
+    }
+
+    //recuperamos el token para recibir notificaciones de FCM al movil
+    private void sendRegistrationTokenToServer(final String userID){
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this, "Error al obtener el token de la app",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        saveAppToken(task.getResult().getToken(), userID);
+                    }
+                });
+    }
+
+    private void saveAppToken(String token, String userID){
+        WriteBatch batch = FirebaseFirestore.getInstance().batch();
+        HashMap<String, Object> usuario = new HashMap<>();
+        usuario.put("tokenFCM", token);
+        batch.update(mDocRefUsuarios.document(userID), usuario);
+        batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                //Volver a la pantalla principal
+                Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getBaseContext(),"Error al guardar el tokenFCM", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        });
     }
 }
