@@ -1,9 +1,11 @@
 package com.example.parkingenable;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -175,6 +177,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // Intents action that will be fired when transitions are triggered
     private final String TRANSITION_ACTION_RECEIVER =
             BuildConfig.APPLICATION_ID + "TRANSITION_ACTION_RECEIVER";
+    /* Id to identify Bluetooth enable request. */
+    private int REQUEST_ENABLE_BT = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -864,18 +868,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Bluetooth not enabled");
-                builder.setMessage("Please enable bluetooth in settings and restart this application.");
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                builder.setTitle("Bluetooth no activado");
+                builder.setMessage("Por favor, habilita el bluetooth para acceder a esta funcionalidad");
+                builder.setPositiveButton("Activar", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        //finish();
-                        //System.exit(0);
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                    }
+                });
+                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        Toast.makeText(getBaseContext(), "Bluetooth necesario", Toast.LENGTH_SHORT).show();
+                        removeActivityUpdates();
                     }
                 });
                 builder.show();
-            }
+            }else
+                requestActivityUpdates();
         } catch (RuntimeException e) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Bluetooth LE not available");
@@ -957,6 +968,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 Toast.LENGTH_SHORT)
                                 .show();
                         settings.edit().putBoolean("ActivityRecognition", false).apply();
+                        settings.edit().putBoolean(AUTO_PARKING, false).apply();
                     }
                 }
         );
@@ -970,6 +982,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 "Error al recoger actividad",
                                 Toast.LENGTH_SHORT)
                                 .show();
+                        settings.edit().putBoolean("ActivityRecognition", false).apply();
+                        settings.edit().putBoolean(AUTO_PARKING, false).apply();
                     }
                 }
         );
@@ -1019,11 +1033,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Enable/Disable activity tracking and ask for permissions if needed.
         if (activityRecognitionPermissionApproved()) {
             verifyBluetooth();
-            requestActivityUpdates();
 
         } else {
-            /*Intent startIntent = new Intent(this, PermissionRationalActivity.class);
-            startActivity(startIntent);*/
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ActivityCompat.requestPermissions(
                         this,
@@ -1036,8 +1047,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_ACTIVITY_RECOGNITION) {
-            verifyBluetooth();
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission is granted. Continue the action or workflow
+                // in your app.
+                verifyBluetooth();
+            }  else {
+                // Explain to the user that the feature is unavailable because
+                // the features requires a permission that the user has denied.
+                // At the same time, respect the user's decision. Don't link to
+                // system settings in an effort to convince the user to change
+                // their decision.
+                Toast.makeText(getBaseContext(), "Reconocimiento de actividad necesaria", Toast.LENGTH_SHORT).show();
+                removeActivityUpdates();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @androidx.annotation.Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == Activity.RESULT_OK){
             requestActivityUpdates();
+        }else{
+            Toast.makeText(getBaseContext(), "Bluetooth necesario", Toast.LENGTH_SHORT).show();
+            removeActivityUpdates();
         }
     }
 
