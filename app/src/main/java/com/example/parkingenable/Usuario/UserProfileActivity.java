@@ -54,6 +54,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -336,11 +337,32 @@ public class UserProfileActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = settings.edit();
         editor.clear();
         editor.apply();
+        deleteAppToken();
+    }
 
-        //Volver a la pantalla principal
-        Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
+    private void deleteAppToken(){
+        WriteBatch batch = FirebaseFirestore.getInstance().batch();
+        HashMap<String, Object> usuario = new HashMap<>();
+        usuario.put("tokenFCM", null);
+        batch.update(mDocRefUsuarios.document(userId), usuario);
+        batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                //Volver a la pantalla principal
+                Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getBaseContext(),"Error al borrar el tokenFCM", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+
+            }
+        });
     }
 
     /**
