@@ -8,7 +8,6 @@ import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -162,7 +161,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Marker> marcadoresPlazasOcupadasDesconocidas = new ArrayList<>();
     private Marker plazaRegistrarOcupacion;
     private String plazaOcupadaUsuarioID;
-    private PlazaParkingDB plazaOcupadaUsuario;
+    private PlazaParking plazaOcupadaUsuario;
 
 
     /**
@@ -380,7 +379,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 for(QueryDocumentSnapshot plaza: value){
                     if(plaza.get("calle")!=null){
                         Integer plazaID = Integer.parseInt(plaza.getId());
-                        PlazaParkingDB plazaDB = plaza.toObject(PlazaParkingDB.class);
+                        PlazaParking plazaDB = plaza.toObject(PlazaParking.class);
 
                         String estado;
                         if(plazaDB.isLibre()){
@@ -869,7 +868,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Bluetooth no activado");
-                builder.setMessage("Por favor, habilita el bluetooth para acceder a esta funcionalidad");
+                builder.setMessage("Por favor, habilita el bluetooth para acceder al registro automático de aparcamiento");
                 builder.setPositiveButton("Activar", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

@@ -47,7 +47,7 @@ public class ParkingActivity extends AppCompatActivity {
     String idPlazaParking;
     Boolean voted=false;
     Button buttonErrorParking;
-    PlazaParkingDB plazaDB;
+    PlazaParking plazaDB;
     //plaza que está ocupando el usuario registrado en este momento
     private String plazaOcupadaUsuarioID;
 
@@ -213,7 +213,7 @@ public class ParkingActivity extends AppCompatActivity {
                     if(task.isSuccessful()){
 
                         DocumentSnapshot document = task.getResult();
-                        plazaDB = document.toObject(PlazaParkingDB.class);
+                        plazaDB = document.toObject(PlazaParking.class);
 
                         streetName.setText(plazaDB.getCalle());
                         textLike.setText("Me gusta: "+ plazaDB.getLike());
